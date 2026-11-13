@@ -1,0 +1,14 @@
+# Secrets
+.env
+.env.*
+
+# Dependencies and builds
+node_modules/
+build/
+dist/
+out/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
