@@ -150,6 +150,7 @@ static esp_err_t h_time(httpd_req_t *r)
 void portal_start(void)
 {
     if (s_http) return;
+    if (!espnow_link_active()) espnow_link_enable(true);   // hotspot needs the Wi-Fi radio
     wifi_config_t ap = {0};
     snprintf((char *)ap.ap.ssid, sizeof(ap.ap.ssid), "FIELDCOMM-%s", g_set.name);
     ap.ap.ssid_len = strlen((char *)ap.ap.ssid);
@@ -182,6 +183,7 @@ void portal_stop(void)
     s_http = NULL;
     esp_wifi_set_mode(WIFI_MODE_STA);
     espnow_link_apply();
+    if (g_set.power_saver) espnow_link_enable(false);
 }
 
 bool portal_running(void) { return s_http != NULL; }

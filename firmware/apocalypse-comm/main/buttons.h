@@ -23,3 +23,6 @@ void buttons_init(void);
 bool buttons_get(btn_ev_t *ev, uint32_t timeout_ms);
 bool buttons_is_down(btn_t b);
 void buttons_flush(void);
+bool buttons_present(void);        // false if the button ladder is not wired
+uint8_t buttons_seen_mask(void);   // which buttons were pressed (self-test)
+void buttons_clear_seen(void);

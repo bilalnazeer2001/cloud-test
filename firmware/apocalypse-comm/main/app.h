@@ -68,6 +68,7 @@ typedef struct {
     int16_t tz_min;        // time zone offset from phone (minutes, JS style)
     uint8_t screen_s;      // screen off after N seconds (0 = never)
     bool    modem_listen;  // always decode audio modem packets from the mic
+    bool    power_saver;   // Wi-Fi radio off, LoRa only, slower CPU
 } settings_t;
 
 extern settings_t g_set;

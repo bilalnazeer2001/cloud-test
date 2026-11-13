@@ -15,6 +15,38 @@ static uint32_t s_last_input;
 static bool s_screen_off;
 static int s_last_unread;
 
+// ------------------------------------------------------------ speaker-only mode
+// With no screen, the device reads menus, numbers and messages in Morse code.
+static QueueHandle_t s_sayq;
+static volatile bool s_say_abort;
+
+bool ui_headless(void) { return !disp_present(); }
+
+static void say_task(void *arg)
+{
+    char buf[MAX_TEXT + 24];
+    for (;;) {
+        xQueueReceive(s_sayq, buf, portMAX_DELAY);
+        s_say_abort = false;
+        morse_send(buf, g_set.wpm < 18 ? 18 : g_set.wpm, true, false, &s_say_abort);
+    }
+}
+
+void ui_say(const char *text)
+{
+    if (!ui_headless() || !audio_has_speaker() || !text) return;
+    if (!s_sayq) {
+        s_sayq = xQueueCreate(1, MAX_TEXT + 24);
+        xTaskCreate(say_task, "say", 3072, NULL, 4, NULL);
+    }
+    char buf[MAX_TEXT + 24] = {0};
+    strncpy(buf, text, sizeof(buf) - 1);
+    s_say_abort = true;                          // interrupt whatever is being said
+    xQueueOverwrite(s_sayq, buf);
+}
+
+static void say_stop(void) { s_say_abort = true; if (s_sayq) xQueueReset(s_sayq); }
+
 void ui_header(const char *title)
 {
     disp_clear();
@@ -37,7 +69,12 @@ void ui_header(const char *title)
 
 static void sos_popup(const char *who, const char *text)
 {
+    char b[MAX_TEXT + 24];
+    snprintf(b, sizeof(b), "SOS %s %s", who, text);
+    uint32_t t0 = now_ms();
     for (int blink = 0;; blink++) {
+        if (blink % 40 == 1) ui_say(b);
+        if (!buttons_present() && now_ms() - t0 > 30000) break;   // nobody can press OK
         disp_clear();
         if (blink & 1) disp_fill_rect(0, 0, DISP_W, 18, true);
         disp_text_big(28, 1, "! SOS !");
@@ -66,8 +103,25 @@ bool ui_event(btn_ev_t *ev, uint32_t timeout_ms)
             return false;
         }
         int unread = store_unread();
-        if (unread > s_last_unread && s_screen_off) { disp_power(true); s_screen_off = false; s_last_input = now_ms(); }
+        if (unread > s_last_unread) {
+            if (s_screen_off) { disp_power(true); s_screen_off = false; s_last_input = now_ms(); }
+            msg_t m;
+            if (ui_headless() && store_get(0, &m) && !m.out) {
+                char b[MAX_TEXT + 24];
+                snprintf(b, sizeof(b), "MSG %s %s", m.name, m.text);
+                vTaskDelay(pdMS_TO_TICKS(600));      // let the alert sound finish
+                ui_say(b);
+            }
+        }
         s_last_unread = unread;
+
+        static uint32_t last_bat_warn;               // low battery reminder every 10 min
+        int pct = power_battery_pct();
+        if (pct >= 0 && pct < 10 && (!last_bat_warn || now_ms() - last_bat_warn > 600000)) {
+            last_bat_warn = now_ms();
+            audio_alert();
+            ui_say("LOW BAT");
+        }
 
         if (got) {
             s_last_input = now_ms();
@@ -76,7 +130,10 @@ bool ui_event(btn_ev_t *ev, uint32_t timeout_ms)
                 s_screen_off = false;
                 if (ev->btn != BTN_MORSE) continue;
             }
-            if (ev->btn != BTN_MORSE && (ev->type == EV_CLICK || ev->type == EV_LONG)) audio_beep();
+            if (ev->btn != BTN_MORSE && (ev->type == EV_CLICK || ev->type == EV_LONG)) {
+                say_stop();
+                audio_click(ev->btn);
+            }
             return true;
         }
         if (g_set.screen_s && !s_screen_off && now_ms() - s_last_input > g_set.screen_s * 1000u) {
@@ -89,8 +146,9 @@ bool ui_event(btn_ev_t *ev, uint32_t timeout_ms)
 
 int ui_menu(const char *title, const char *const *items, int n, int start)
 {
-    int sel = start < n ? start : 0, top = 0;
+    int sel = start < n ? start : 0, top = 0, said = -1;
     for (;;) {
+        if (sel != said) { ui_say(items[sel]); said = sel; }
         if (sel < top) top = sel;
         if (sel >= top + UI_LINES) top = sel - UI_LINES + 1;
         ui_header(title);
@@ -138,6 +196,7 @@ void ui_textview(const char *title, const char *text)
 {
     static char lines[120][DISP_COLS + 1];
     int n = wrap(text, lines, 120), top = 0;
+    ui_say(text);
     for (;;) {
         ui_header(title);
         for (int i = 0; i < UI_LINES && top + i < n; i++) disp_text(0, UI_LINE(i), lines[top + i], false);
@@ -153,14 +212,21 @@ void ui_textview(const char *title, const char *text)
         else if (ev.btn == BTN_DOWN && top < maxtop) top++;
         else if (ev.btn == BTN_LEFT) top = top > UI_LINES ? top - UI_LINES : 0;
         else if (ev.btn == BTN_RIGHT) top = top + UI_LINES < maxtop ? top + UI_LINES : maxtop;
+        else if (ev.btn == BTN_OK && ui_headless()) ui_say(text);      // OK = read again
         else if (ev.btn == BTN_BACK || ev.btn == BTN_OK) return;
     }
 }
 
 bool ui_confirm(const char *q)
 {
-    int sel = 0;
+    int sel = 0, said = -1;
     for (;;) {
+        if (said != sel) {
+            char b[MAX_TEXT + 24];
+            snprintf(b, sizeof(b), said < 0 ? "%.40s %s" : "%.0s%s", q, sel ? "YES" : "NO");
+            ui_say(b);
+            said = sel;
+        }
         ui_header("Are you sure?");
         char lines[4][DISP_COLS + 1];
         int n = wrap(q, lines, 3);
@@ -184,6 +250,7 @@ void ui_toast(const char *msg, uint32_t ms)
     if (w > DISP_W - 16) w = DISP_W - 16;
     disp_text((DISP_W - w) / 2, 28, msg, false);
     disp_flush();
+    ui_say(msg);
     if (ms) vTaskDelay(pdMS_TO_TICKS(ms));
 }
 
@@ -193,6 +260,8 @@ int ui_number(const char *title, int val, int min, int max, int step, const char
         ui_header(title);
         char b[24];
         snprintf(b, sizeof(b), "%d %s", val, unit ? unit : "");
+        static int said = INT32_MIN;
+        if (said != val) { char n[12]; snprintf(n, sizeof(n), "%d", val); ui_say(n); said = val; }
         disp_text_big((DISP_W - strlen(b) * 12) / 2, 24, b);
         disp_text(0, 55, "UP/DN change  OK save", false);
         disp_flush();
@@ -216,8 +285,14 @@ bool ui_text_input(const char *title, char *buf, int max)
     morse_dec_init(&md, 1200.0f / g_set.wpm, true);
     uint32_t key_up_at = 0;
     bool key_down = false;
+    int said_r = -1, said_c = -1;
 
     for (;;) {
+        if (r != said_r || c != said_c) {
+            char ch[8] = {KB[r][c], 0};
+            ui_say(ch[0] == '_' ? "SPACE" : ch);
+            said_r = r; said_c = c;
+        }
         ui_header(title);
         // last 42 characters of the text, with a cursor
         int start = len > 2 * DISP_COLS - 1 ? len - (2 * DISP_COLS - 1) : 0;

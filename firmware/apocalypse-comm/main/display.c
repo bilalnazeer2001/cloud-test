@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include "driver/i2c_master.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "sdkconfig.h"
 #include "display.h"
 
@@ -11,7 +12,8 @@ static const char *TAG = "disp";
 static i2c_master_bus_handle_t s_bus;
 static i2c_master_dev_handle_t s_dev;
 static uint8_t s_fb[DISP_W * DISP_H / 8];
-static bool s_ok;
+static bool s_ok, s_bus_ok;
+static uint32_t s_last_probe;
 
 // Classic 5x7 font, ASCII 0x20..0x7E, one byte per column, LSB = top row.
 static const uint8_t FONT[95][5] = {
@@ -49,8 +51,26 @@ static esp_err_t cmd(const uint8_t *c, size_t n)
     return i2c_master_transmit(s_dev, buf, n + 1, 100);
 }
 
+static const uint8_t INIT_SEQ[] = {
+    0xAE, 0xD5, 0x80, 0xA8, 0x3F, 0xD3, 0x00, 0x40, 0x8D, 0x14,
+    0x20, 0x00, 0xA1, 0xC8, 0xDA, 0x12, 0x81, 0xCF, 0xD9, 0xF1,
+    0xDB, 0x40, 0xA4, 0xA6, 0x2E, 0xAF,
+};
+
+// Look for the display; safe to call any time (hot-plug).
+static bool probe(void)
+{
+    s_last_probe = (uint32_t)(esp_timer_get_time() / 1000);
+    if (!s_bus_ok) return false;
+    if (i2c_master_probe(s_bus, CONFIG_OLED_ADDR, 30) != ESP_OK) return false;
+    return cmd(INIT_SEQ, sizeof(INIT_SEQ)) == ESP_OK;
+}
+
+bool disp_present(void) { return s_ok; }
+
 bool disp_init(void)
 {
+    if (CONFIG_PIN_I2C_SDA < 0 || CONFIG_PIN_I2C_SCL < 0) return false;
     i2c_master_bus_config_t bc = {
         .i2c_port = I2C_NUM_0,
         .sda_io_num = CONFIG_PIN_I2C_SDA,
@@ -60,6 +80,7 @@ bool disp_init(void)
         .flags.enable_internal_pullup = true,
     };
     if (i2c_new_master_bus(&bc, &s_bus) != ESP_OK) return false;
+    s_bus_ok = true;
     i2c_device_config_t dc = {
         .dev_addr_length = I2C_ADDR_BIT_LEN_7,
         .device_address = CONFIG_OLED_ADDR,
@@ -67,24 +88,25 @@ bool disp_init(void)
     };
     if (i2c_master_bus_add_device(s_bus, &dc, &s_dev) != ESP_OK) return false;
 
-    static const uint8_t init[] = {
-        0xAE, 0xD5, 0x80, 0xA8, 0x3F, 0xD3, 0x00, 0x40, 0x8D, 0x14,
-        0x20, 0x00, 0xA1, 0xC8, 0xDA, 0x12, 0x81, 0xCF, 0xD9, 0xF1,
-        0xDB, 0x40, 0xA4, 0xA6, 0x2E, 0xAF,
-    };
-    s_ok = cmd(init, sizeof(init)) == ESP_OK;
-    if (!s_ok) ESP_LOGW(TAG, "OLED not found at 0x%02X", CONFIG_OLED_ADDR);
+    s_ok = probe();
+    if (!s_ok) ESP_LOGW(TAG, "no OLED at 0x%02X - running without screen", CONFIG_OLED_ADDR);
     disp_clear();
     disp_flush();
     return s_ok;
 }
 
 void disp_contrast(uint8_t level) { uint8_t c[] = {0x81, level}; if (s_ok) cmd(c, 2); }
+void disp_invert(bool on) { uint8_t c = on ? 0xA7 : 0xA6; if (s_ok) cmd(&c, 1); }
 void disp_power(bool on) { uint8_t c = on ? 0xAF : 0xAE; if (s_ok) cmd(&c, 1); }
 
 void disp_flush(void)
 {
-    if (!s_ok) return;
+    if (!s_ok) {                                  // plugged in later? check every 3 s
+        if ((uint32_t)(esp_timer_get_time() / 1000) - s_last_probe < 3000 || !probe()) return;
+        s_ok = true;
+        ESP_LOGI(TAG, "OLED connected");
+    }
+    esp_err_t err = ESP_OK;
     static uint8_t buf[DISP_W + 1];
     buf[0] = 0x40;
 #if CONFIG_OLED_SH1106
@@ -92,16 +114,17 @@ void disp_flush(void)
         uint8_t c[] = {(uint8_t)(0xB0 + p), 0x02, 0x10};   // SH1106 RAM is 132 wide, offset 2
         cmd(c, 3);
         memcpy(buf + 1, s_fb + p * DISP_W, DISP_W);
-        i2c_master_transmit(s_dev, buf, DISP_W + 1, 100);
+        err |= i2c_master_transmit(s_dev, buf, DISP_W + 1, 100);
     }
 #else
     static const uint8_t win[] = {0x21, 0, 127, 0x22, 0, 7};
     cmd(win, sizeof(win));
     for (int p = 0; p < 8; p++) {
         memcpy(buf + 1, s_fb + p * DISP_W, DISP_W);
-        i2c_master_transmit(s_dev, buf, DISP_W + 1, 100);
+        err |= i2c_master_transmit(s_dev, buf, DISP_W + 1, 100);
     }
 #endif
+    if (err != ESP_OK) { s_ok = false; ESP_LOGW(TAG, "OLED disconnected"); }
 }
 
 void disp_clear(void) { memset(s_fb, 0, sizeof(s_fb)); }

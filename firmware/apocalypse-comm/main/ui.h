@@ -15,6 +15,9 @@ bool ui_confirm(const char *question);
 void ui_toast(const char *msg, uint32_t ms);
 int  ui_number(const char *title, int val, int min, int max, int step, const char *unit);
 void ui_run(void);                    // main menu, never returns
+bool ui_headless(void);               // true when no screen is connected
+void ui_say(const char *text);         // speak in Morse (only when headless)
+void app_selftest(void);
 
 // apps
 void app_messages(void);
@@ -26,3 +29,4 @@ void app_settings(void);
 void app_sos(void);
 // background audio receiver (modem / morse from microphone)
 void audio_rx_init(void);
+int  mic_check(void);                 // -1 = no microphone, else noise level

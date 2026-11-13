@@ -16,6 +16,9 @@ void audio_lock(void);
 void audio_unlock(void);
 // Short UI sounds (non-blocking, queued in background)
 void audio_beep(void);
+void audio_click(int button);  // short click, different pitch per button
+bool audio_has_speaker(void);
+bool audio_has_mic(void);      // mic pin configured (see mic_check for a real test)
 void audio_alert(void);      // new message
 void audio_alarm(void);      // SOS received
 // Continuous tone while a Morse key is held (non-blocking)

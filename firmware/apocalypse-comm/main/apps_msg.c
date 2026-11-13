@@ -11,6 +11,7 @@
 #include "morse.h"
 #include "leds.h"
 #include "audio.h"
+#include "power.h"
 
 static const char *const QUICK[] = {
     "I AM OK", "SOS - NEED HELP", "NEED MEDICAL HELP", "NEED WATER", "NEED FOOD",
@@ -236,15 +237,16 @@ void app_settings(void)
 {
     int sel = 0;
     for (;;) {
-        char l[6][22];
+        char l[7][22];
+        snprintf(l[6], 22, "Power saver: %s", g_set.power_saver ? "ON" : "OFF");
         snprintf(l[0], 22, "Name: %s", g_set.name);
         snprintf(l[1], 22, "Volume: %d", g_set.volume);
         snprintf(l[2], 22, "Morse speed: %d wpm", g_set.wpm);
         snprintf(l[3], 22, "Morse tone: %d Hz", g_set.tone_hz);
         snprintf(l[4], 22, "Screen off: %ds", g_set.screen_s);
         snprintf(l[5], 22, "Modem listen: %s", g_set.modem_listen ? "ON" : "OFF");
-        const char *items[] = { l[0], l[1], l[2], l[3], l[4], l[5], "About", "Restart" };
-        sel = ui_menu("Settings", items, 8, sel);
+        const char *items[] = { l[0], l[1], l[2], l[3], l[4], l[5], "About", "Restart", l[6], "Self test" };
+        sel = ui_menu("Settings", items, 10, sel);
         if (sel < 0) return;
         int v;
         switch (sel) {
@@ -272,6 +274,16 @@ void app_settings(void)
             break;
         }
         case 7: if (ui_confirm("Restart now?")) esp_restart(); break;
+        case 8:
+            if (!g_set.power_saver && !ui_confirm(lora_link_present()
+                    ? "Turn Wi-Fi radio off? Only LoRa + audio will work. Battery lasts ~3x longer."
+                    : "No LoRa fitted: radio messages will STOP. Only audio/Morse work. Continue?"))
+                break;
+            g_set.power_saver = !g_set.power_saver;
+            settings_save();
+            power_apply_saver();
+            break;
+        case 9: app_selftest(); break;
         }
     }
 }

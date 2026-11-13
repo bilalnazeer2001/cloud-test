@@ -10,9 +10,13 @@ Off-grid "apocalypse communicator" on ESP32-S3: emergency messaging + basic pock
 
 ## Tasks
 - [x] Firmware written (`firmware/apocalypse-comm`), compiles with ESP-IDF v5.3.2
-- [ ] Wire up hardware and flash (Bilal, on PC)
+- [x] v2: XIAO ESP32S3 + Wio-SX1262 profile, works with any part missing, speaker-only Morse mode, self test, power saver
+- [x] Kit guide: power (18650, solar, crank, AA, TEG), antennas, box (`firmware/apocalypse-comm/HARDWARE_KIT.md`)
+- [ ] Buy parts, wire up hardware and flash (Bilal, on PC)
+- [ ] Run Tools > Self test and the remove-one-part test
 - [ ] Test range between two units
-- [ ] Later: encryption, RTC module, GPS location in SOS
+- [ ] Measure real battery life in normal and power-saver mode
+- [ ] Later: encryption, deep-sleep standby, RTC module, GPS location in SOS, recorded voice prompts
 
 ## Notes
 Default pins are in `firmware/apocalypse-comm/README.md`.

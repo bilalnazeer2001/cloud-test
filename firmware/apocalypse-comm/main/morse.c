@@ -4,6 +4,7 @@
 #include "audio.h"
 #include "leds.h"
 #include "morse.h"
+#include "display.h"
 
 static const struct { char c; const char *m; } TABLE[] = {
     {'A', ".-"}, {'B', "-..."}, {'C', "-.-."}, {'D', "-.."}, {'E', "."}, {'F', "..-."},
@@ -35,11 +36,11 @@ char morse_char(const char *code)
 
 static void element(uint32_t ms, bool on, bool sound, bool light)
 {
-    if (light) { led_set(LED_WHITE, on); led_set(LED_RED, on); }
+    if (light) { led_set(LED_WHITE, on); led_set(LED_RED, on); if (!led_has_own(LED_WHITE)) disp_invert(on); }
     if (on && sound) audio_tone(g_set.tone_hz, ms);
     else if (sound) audio_silence(ms);
     else vTaskDelay(pdMS_TO_TICKS(ms));
-    if (light) { led_set(LED_WHITE, false); led_set(LED_RED, false); }
+    if (light) { led_set(LED_WHITE, false); led_set(LED_RED, false); if (!led_has_own(LED_WHITE)) disp_invert(false); }
 }
 
 void morse_send(const char *text, uint8_t wpm, bool sound, bool light, volatile bool *abort_flag)
@@ -51,7 +52,7 @@ void morse_send(const char *text, uint8_t wpm, bool sound, bool light, volatile 
         if (*p == ' ') { element(dot * 4, false, sound, light); continue; }   // 3 after letter + 4 = 7
         const char *m = (*p == '#') ? "...---..." : morse_code(*p);
         if (!m) continue;
-        for (const char *e = m; *e; e++) {
+        for (const char *e = m; *e && !(abort_flag && *abort_flag); e++) {
             element(*e == '.' ? dot : dot * 3, true, sound, light);
             element(dot, false, sound, light);
         }

@@ -8,3 +8,4 @@ void leds_init(void);
 void led_set(led_t l, bool on);
 // Turn on for ms, then off automatically.
 void led_pulse(led_t l, uint32_t ms);
+bool led_has_own(led_t l);     // true if this role has its own LED wired

@@ -282,11 +282,11 @@ void app_tools(void)
 {
     static const char *const items[] = {
         "Calculator", "Flashlight", "Notes", "Stopwatch", "Countdown timer", "Tally counter",
-        "Supplies planner", "Survival guide", "Random / dice", "Battery & system",
+        "Supplies planner", "Survival guide", "Random / dice", "Battery & system", "Self test",
     };
     int sel = 0;
     for (;;) {
-        sel = ui_menu("Tools", items, 10, sel);
+        sel = ui_menu("Tools", items, 11, sel);
         switch (sel) {
         case -1: return;
         case 0: calculator(); break;
@@ -299,6 +299,7 @@ void app_tools(void)
         case 7: guide(); break;
         case 8: random_tool(); break;
         case 9: system_info(); break;
+        case 10: app_selftest(); break;
         }
     }
 }

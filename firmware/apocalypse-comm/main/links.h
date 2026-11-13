@@ -7,6 +7,8 @@
 void espnow_link_init(void);
 bool espnow_link_send(const uint8_t *data, int len);
 void espnow_link_apply(void);      // re-apply channel / long-range settings
+void espnow_link_enable(bool on);  // turn the Wi-Fi radio on/off (power saver)
+bool espnow_link_active(void);
 
 // Optional LoRa module (SX1276/RFM95), kilometres of range.
 void lora_link_init(void);

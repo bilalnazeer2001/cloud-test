@@ -18,35 +18,40 @@ An off-grid emergency messenger and pocket computer. No internet, no phone tower
 - Inbox of the last 24 messages, saved across power loss. Quick preset messages ("I AM OK", "NEED WATER"...).
 - Morse decoder (listens with the mic), Morse practice with the key button, type with Morse in any text box.
 
-**Basic computer (Tools menu)**: calculator, flashlight/strobe/SOS light, 8 saved notes, stopwatch, countdown timer, tally counter, supplies planner (water/food for N people x D days), survival guide (water, first aid, CPR, direction, signals), dice/coin, battery level.
+**Basic computer (Tools menu)**: calculator, flashlight/strobe/SOS light, 8 saved notes, stopwatch, countdown timer, tally counter, supplies planner (water/food for N people x D days), survival guide (water, first aid, CPR, direction, signals), dice/coin, battery level, **self test**.
 
-## Parts
-- ESP32-S3 dev board (e.g. ESP32-S3-DevKitC, 4 MB flash or more)
-- 0.96" SSD1306 or 1.3" SH1106 I2C OLED (128x64)
-- 7 push buttons (UP, DOWN, LEFT, RIGHT, OK, BACK, MORSE)
-- 4 LEDs (red, green, blue, white) + 330 ohm resistors
-- MAX98357A I2S amplifier + 4-8 ohm speaker
-- INMP441 I2S microphone
-- Optional: SX1276 LoRa module + antenna, 18650 battery + TP4056 charger + 2x 100k resistors
+**Power saver** (Settings): turns the Wi-Fi radio off and keeps LoRa + audio listening. Battery lasts about 3x longer (estimate).
 
-## Wiring (default pins - change in `idf.py menuconfig` > "Apocalypse Communicator - Wiring")
-| Part | Pin on part | ESP32-S3 GPIO |
+## Hardware
+**Recommended compact build: Seeed XIAO ESP32S3 + Wio-SX1262.** See **[HARDWARE_KIT.md](HARDWARE_KIT.md)** for:
+the wiring, the 7-buttons-on-1-pin ladder, power sources (battery, solar, crank, AA, heat), antennas,
+the kit box layout and a full test plan.
+
+Every part is optional. The firmware detects what is connected, and with no screen it reads everything out in Morse.
+
+Pin defaults come from `idf.py menuconfig` > "Apocalypse Communicator - Wiring" > **Board**:
+- **XIAO ESP32S3 + Wio-SX1262** (default): see the table in HARDWARE_KIT.md.
+- **Generic ESP32-S3 DevKit:** one pin per button/LED, as below.
+
+| Part (DevKit option) | Pin on part | ESP32-S3 GPIO |
 |---|---|---|
-| OLED | SDA / SCL / VCC / GND | 8 / 9 / 3V3 / GND |
+| OLED | SDA / SCL | 8 / 9 |
 | Buttons (other leg to GND) | UP DOWN LEFT RIGHT OK BACK MORSE | 4 5 6 7 15 16 17 |
 | LEDs (via 330 ohm to GND) | red green blue white | 38 39 40 41 |
-| MAX98357A | BCLK / LRC / DIN / VIN / GND | 10 / 11 / 12 / 5V / GND |
-| INMP441 | SCK / WS / SD / L/R / VDD / GND | 13 / 14 / 18 / GND / 3V3 / GND |
+| MAX98357A | BCLK / LRC / DIN | 10 / 11 / 12 |
+| INMP441 | SCK / WS / SD / L/R | 13 / 14 / 18 / GND |
 | Battery divider (100k + 100k) | middle point | 1 |
-| LoRa SX1276 (optional) | SCK MISO MOSI NSS RST / 3V3 / GND | 21 47 48 42 2 / 3V3 / GND |
+| LoRa SX1276 (optional) | SCK MISO MOSI NSS RST | 21 47 48 42 2 |
 
-Avoid GPIO 0, 3, 19, 20, 26-37, 45, 46 (boot, USB and flash/PSRAM pins).
+Avoid GPIO 0, 3, 19, 20, 26-37, 45, 46 on a DevKit (boot, USB and flash/PSRAM pins).
+If the XIAO's built-in LED works backwards (on when it should be off), switch "LEDs light when pin is LOW" in menuconfig.
 
 ## Build and flash (on your PC)
 1. Install ESP-IDF v5.3 (Espressif's installer / VS Code ESP-IDF extension).
 2. In this folder: `idf.py set-target esp32s3`
 3. Optional: `idf.py menuconfig` to change pins or enable LoRa.
-4. `idf.py -p COM5 flash monitor` (use your board's port).
+4. `idf.py -p COM5 flash monitor` (use your board's port). Logs come out of the board's native USB port.
+5. Run **Tools > Self test** on the device.
 
 ## Using it
 - Arrows move, **OK** selects, **BACK** goes back. **Hold OK** = done when typing. **Hold BACK** = cancel / stop SOS.
@@ -64,5 +69,6 @@ Don't build your own transmitter from loose crystal oscillators: it will be weak
 
 ## Limits / honest notes
 - Messages are **not encrypted** - anyone with this firmware can read them. Don't send secrets.
-- Not tested on real hardware yet (this was written in the cloud). It compiles cleanly with ESP-IDF v5.3.2, and the audio modem and calculator were tested on a PC.
+- Not tested on real hardware yet (this was written in the cloud). It compiles cleanly with ESP-IDF v5.3.2 for XIAO, DevKit, both LoRa chips and an "everything missing" setup. The audio modem, calculator and button ladder were tested on a PC.
+- The SX1262 driver follows the datasheet and the Wio-SX1262 pinout. Confirm it on hardware with two units.
 - Long Range Wi-Fi mode only talks to other ESP32s.

@@ -20,6 +20,8 @@ static volatile float s_wpm;
 static char s_text[256];                    // decoded Morse text ring
 static volatile int s_text_len;
 static volatile uint32_t s_modem_pkts;
+static volatile bool s_check_req;
+static volatile int s_check_result;          // -1 no mic, else RMS level
 
 static void on_modem_packet(const uint8_t *d, int len)
 {
@@ -66,6 +68,22 @@ static void rx_task(void *arg)
     uint32_t run_ms = 0;
 
     for (;;) {
+        if (s_check_req) {                      // self-test: is a microphone really there?
+            audio_mic_enable(true);
+            int16_t b[256];
+            int32_t mn = 32767, mx = -32768;
+            int64_t sq = 0;
+            int total = 0;
+            audio_mic_read(b, 256, 200);        // discard start-up samples
+            for (int k = 0; k < 16; k++) {
+                size_t got = audio_mic_read(b, 256, 200);
+                for (size_t i = 0; i < got; i++) { if (b[i] < mn) mn = b[i]; if (b[i] > mx) mx = b[i]; sq += b[i] * b[i]; }
+                total += got;
+            }
+            s_check_result = (total == 0 || mx == mn) ? -1 : (int)sqrtf((float)(sq / total));
+            if (last == RX_OFF) audio_mic_enable(false);
+            s_check_req = false;
+        }
         rx_mode_t mode = s_mode;
         if (mode == RX_OFF && g_set.modem_listen) mode = RX_MODEM;
         if (mode != last) {
@@ -104,6 +122,15 @@ static void rx_task(void *arg)
         if (!on) { char c = morse_dec_gap(&md, run_ms); if (c) push_char(c); }
         s_wpm = 1200.0f / md.dot_ms;
     }
+}
+
+int mic_check(void)
+{
+    if (!audio_has_mic()) return -1;
+    s_check_result = -1;
+    s_check_req = true;
+    for (int i = 0; i < 40 && s_check_req; i++) vTaskDelay(pdMS_TO_TICKS(50));
+    return s_check_req ? -1 : s_check_result;
 }
 
 void audio_rx_init(void)

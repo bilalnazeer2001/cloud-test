@@ -22,3 +22,5 @@ int  disp_printf(int x, int y, bool invert, const char *fmt, ...) __attribute__(
 int  disp_text_big(int x, int y, const char *s);
 void disp_contrast(uint8_t level);
 void disp_power(bool on);
+void disp_invert(bool on);          // whole screen white (signal light)
+bool disp_present(void);            // re-checked every few seconds (hot-plug)

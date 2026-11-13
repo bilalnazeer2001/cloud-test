@@ -13,6 +13,7 @@
 static const char *TAG = "espnow";
 static const uint8_t BCAST[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 static bool s_ok;
+static bool start_now(void);
 
 static void on_recv(const esp_now_recv_info_t *info, const uint8_t *data, int len)
 {
@@ -43,10 +44,14 @@ void espnow_link_init(void)
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     esp_wifi_set_storage(WIFI_STORAGE_RAM);
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_start());
-    esp_wifi_set_ps(WIFI_PS_NONE);         // always listening
+    if (!g_set.power_saver) espnow_link_enable(true);
+}
 
-    if (esp_now_init() != ESP_OK) { ESP_LOGE(TAG, "esp_now_init failed"); return; }
+static bool start_now(void)
+{
+    if (esp_wifi_start() != ESP_OK) return false;
+    esp_wifi_set_ps(WIFI_PS_NONE);         // always listening
+    if (esp_now_init() != ESP_OK) { ESP_LOGE(TAG, "esp_now_init failed"); return false; }
     esp_now_register_recv_cb(on_recv);
     esp_now_peer_info_t peer = {0};
     memcpy(peer.peer_addr, BCAST, 6);
@@ -57,7 +62,20 @@ void espnow_link_init(void)
     s_ok = true;
     espnow_link_apply();
     ESP_LOGI(TAG, "ready on channel %d", g_set.channel);
+    return true;
 }
+
+void espnow_link_enable(bool on)
+{
+    if (on == s_ok) return;
+    if (on) { start_now(); return; }
+    s_ok = false;
+    esp_now_deinit();
+    esp_wifi_stop();
+    ESP_LOGI(TAG, "Wi-Fi radio off");
+}
+
+bool espnow_link_active(void) { return s_ok; }
 
 bool espnow_link_send(const uint8_t *data, int len)
 {
