@@ -1,0 +1,8 @@
+{
+  "name": "Field Communicator (ESP32-S3 DevKit)",
+  "version": "2.1",
+  "new_install_prompt_erase": true,
+  "builds": [
+    { "chipFamily": "ESP32-S3", "parts": [ { "path": "firmware/fieldcomm-s3devkit.bin", "offset": 0 } ] }
+  ]
+}

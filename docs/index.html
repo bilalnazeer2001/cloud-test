@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Field Communicator Flasher</title>
+<script type="module" src="vendor/esp-web-tools/install-button.js"></script>
+<style>
+  :root { --bg:#14110f; --card:#211c18; --text:#efe7dd; --muted:#b3a698; --accent:#e0592a; --line:#3a312a; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 28px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+  .board { background: var(--card); border:1px solid var(--line); border-radius: 12px; padding: 18px; margin-bottom: 14px;
+           display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .board h2 { font-size: 18px; margin: 0; }
+  .board p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+  esp-web-install-button button { background: var(--accent); color:#fff; border:0; border-radius:8px; padding:10px 18px;
+           font-size:15px; font-weight:600; cursor:pointer; }
+  ol { padding-left: 20px; } li { margin: 6px 0; }
+  .note { border-left: 3px solid var(--accent); padding: 8px 12px; background: var(--card); border-radius: 0 8px 8px 0; color: var(--muted); }
+  code { background:#000; padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Field Communicator</h1>
+  <p class="sub">Off-grid emergency messenger + pocket computer. Flash it straight from Chrome or Edge on a computer.</p>
+
+  <div class="board">
+    <div><h2>Seeed XIAO ESP32S3 + Wio-SX1262</h2><p>Compact handheld build (recommended)</p></div>
+    <esp-web-install-button manifest="manifest-xiao.json">
+      <button slot="activate">Install</button>
+      <span slot="unsupported">Use Chrome or Edge on a computer.</span>
+      <span slot="not-allowed">Open this page over https.</span>
+    </esp-web-install-button>
+  </div>
+
+  <div class="board">
+    <div><h2>ESP32-WROOM-32 DevKit</h2><p>Classic ESP32 boards</p></div>
+    <esp-web-install-button manifest="manifest-esp32.json">
+      <button slot="activate">Install</button>
+      <span slot="unsupported">Use Chrome or Edge on a computer.</span>
+      <span slot="not-allowed">Open this page over https.</span>
+    </esp-web-install-button>
+  </div>
+
+  <div class="board">
+    <div><h2>ESP32-S3 DevKit</h2><p>Generic S3 board, one pin per button</p></div>
+    <esp-web-install-button manifest="manifest-s3devkit.json">
+      <button slot="activate">Install</button>
+      <span slot="unsupported">Use Chrome or Edge on a computer.</span>
+      <span slot="not-allowed">Open this page over https.</span>
+    </esp-web-install-button>
+  </div>
+
+  <h2>How to flash</h2>
+  <ol>
+    <li>Plug the board into the computer with a USB <b>data</b> cable.</li>
+    <li>Click <b>Install</b> for your board and pick its port in the pop-up.</li>
+    <li>Tick <b>Erase device</b> on the first install, then wait about a minute.</li>
+    <li>If it won't connect: hold the <b>BOOT</b> button, tap <b>RESET</b>, release BOOT, and try again.</li>
+    <li>After flashing, open <b>Tools &rarr; Self test</b> on the device.</li>
+  </ol>
+  <p class="note">Wiring for each board is in <code>firmware/apocalypse-comm/HARDWARE_KIT.md</code> and <code>README.md</code>.
+  Pins can only be changed by rebuilding with ESP-IDF (<code>idf.py menuconfig</code>).</p>
+</main>
+</body>
+</html>

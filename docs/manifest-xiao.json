@@ -1,0 +1,8 @@
+{
+  "name": "Field Communicator (Seeed XIAO ESP32S3 + Wio-SX1262)",
+  "version": "2.1",
+  "new_install_prompt_erase": true,
+  "builds": [
+    { "chipFamily": "ESP32-S3", "parts": [ { "path": "firmware/fieldcomm-xiao.bin", "offset": 0 } ] }
+  ]
+}

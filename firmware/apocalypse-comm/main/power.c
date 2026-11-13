@@ -39,10 +39,16 @@ int adc_read_mv(int gpio)
         }
         adc_oneshot_chan_cfg_t cc = {.atten = ADC_ATTEN_DB_12, .bitwidth = ADC_BITWIDTH_DEFAULT};
         adc_oneshot_config_channel(s_adc, ch, &cc);
-        adc_cali_curve_fitting_config_t cf = {.unit_id = ADC_UNIT_1, .chan = ch, .atten = ADC_ATTEN_DB_12, .bitwidth = ADC_BITWIDTH_DEFAULT};
         s_ch[i].gpio = gpio;
         s_ch[i].ch = ch;
+        s_ch[i].cali = NULL;
+#if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
+        adc_cali_curve_fitting_config_t cf = {.unit_id = ADC_UNIT_1, .chan = ch, .atten = ADC_ATTEN_DB_12, .bitwidth = ADC_BITWIDTH_DEFAULT};
         if (adc_cali_create_scheme_curve_fitting(&cf, &s_ch[i].cali) != ESP_OK) s_ch[i].cali = NULL;
+#elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+        adc_cali_line_fitting_config_t lf = {.unit_id = ADC_UNIT_1, .atten = ADC_ATTEN_DB_12, .bitwidth = ADC_BITWIDTH_DEFAULT};
+        if (adc_cali_create_scheme_line_fitting(&lf, &s_ch[i].cali) != ESP_OK) s_ch[i].cali = NULL;
+#endif
         s_nch++;
     }
     int raw = 0, mv = -1;

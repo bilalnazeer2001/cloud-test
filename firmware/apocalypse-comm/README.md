@@ -43,12 +43,31 @@ Pin defaults come from `idf.py menuconfig` > "Apocalypse Communicator - Wiring" 
 | Battery divider (100k + 100k) | middle point | 1 |
 | LoRa SX1276 (optional) | SCK MISO MOSI NSS RST | 21 47 48 42 2 |
 
-Avoid GPIO 0, 3, 19, 20, 26-37, 45, 46 on a DevKit (boot, USB and flash/PSRAM pins).
+### ESP32-WROOM-32 DevKit (classic ESP32)
+Uses the button ladder (all 7 buttons on GPIO36, plus a 10k pull-up to 3V3, resistor values in HARDWARE_KIT.md).
+
+| Part | Pin on part | ESP32 GPIO |
+|---|---|---|
+| OLED | SDA / SCL | 21 / 22 |
+| Button ladder | | 36 |
+| LEDs | red green blue white | 32 2 33 16 (2 = on-board LED) |
+| MAX98357A | BCLK / LRC / DIN | 26 / 25 / 27 |
+| INMP441 | SCK / WS / SD / L/R | 14 / 13 / 34 / GND (add 100k from SD to GND) |
+| Battery divider | middle point | 39 |
+| LoRa SX1276/Ra-02 | SCK MISO MOSI NSS RST | 18 19 23 5 4 |
+
+The classic ESP32 has no USB port of its own; logs come through the board's USB-serial chip as usual.
+
+Avoid GPIO 0, 3, 19, 20, 26-37, 45, 46 on an S3 DevKit (boot, USB and flash/PSRAM pins).
 If the XIAO's built-in LED works backwards (on when it should be off), switch "LEDs light when pin is LOW" in menuconfig.
+
+## Flash from Chrome (no install needed)
+Open the flasher page (`docs/index.html`, hosted with GitHub Pages), click **Install** for your board, pick the USB port.
+To rebuild the images after changing code: `tools/build_web_flasher.sh`.
 
 ## Build and flash (on your PC)
 1. Install ESP-IDF v5.3 (Espressif's installer / VS Code ESP-IDF extension).
-2. In this folder: `idf.py set-target esp32s3`
+2. In this folder: `idf.py set-target esp32s3` (or `esp32` for a WROOM-32 board)
 3. Optional: `idf.py menuconfig` to change pins or enable LoRa.
 4. `idf.py -p COM5 flash monitor` (use your board's port). Logs come out of the board's native USB port.
 5. Run **Tools > Self test** on the device.

@@ -2,13 +2,19 @@ menu "Apocalypse Communicator - Wiring"
 
     choice BOARD
         prompt "Board"
+        default BOARD_ESP32 if IDF_TARGET_ESP32
         default BOARD_XIAO
         help
             Picks sensible pin defaults. Every pin can still be changed below.
         config BOARD_XIAO
             bool "Seeed XIAO ESP32S3 + Wio-SX1262 kit (compact handheld)"
+            depends on IDF_TARGET_ESP32S3
         config BOARD_DEVKIT
             bool "Generic ESP32-S3 DevKit (many pins)"
+            depends on IDF_TARGET_ESP32S3
+        config BOARD_ESP32
+            bool "ESP32-WROOM-32 DevKit (classic ESP32)"
+            depends on IDF_TARGET_ESP32
     endchoice
 
     comment "Any part can be left out: set its pin to -1, or just don't connect it."
@@ -16,10 +22,12 @@ menu "Apocalypse Communicator - Wiring"
     menu "Display (I2C OLED)"
         config PIN_I2C_SDA
             int "I2C SDA pin"
+            default 21 if BOARD_ESP32
             default 5 if BOARD_XIAO
             default 8
         config PIN_I2C_SCL
             int "I2C SCL pin"
+            default 22 if BOARD_ESP32
             default 6 if BOARD_XIAO
             default 9
         config OLED_ADDR
@@ -38,10 +46,11 @@ menu "Apocalypse Communicator - Wiring"
     menu "Buttons"
         config BUTTONS_LADDER
             bool "All buttons on ONE analog pin (resistor ladder, saves pins)"
-            default y if BOARD_XIAO
+            default y if BOARD_XIAO || BOARD_ESP32
             default n
         config PIN_BTN_LADDER
-            int "Ladder analog pin (ADC1: GPIO1-10)"
+            int "Ladder analog pin (ADC1: S3 GPIO1-10, ESP32 GPIO32-39)"
+            default 36 if BOARD_ESP32
             default 1
             depends on BUTTONS_LADDER
         config LADDER_PULLUP_OHM
@@ -50,30 +59,37 @@ menu "Apocalypse Communicator - Wiring"
             depends on BUTTONS_LADDER
         config PIN_BTN_UP
             int "UP (button to GND)"
+            default 32 if BOARD_ESP32
             default 4
             depends on !BUTTONS_LADDER
         config PIN_BTN_DOWN
             int "DOWN"
+            default 33 if BOARD_ESP32
             default 5
             depends on !BUTTONS_LADDER
         config PIN_BTN_LEFT
             int "LEFT"
+            default 16 if BOARD_ESP32
             default 6
             depends on !BUTTONS_LADDER
         config PIN_BTN_RIGHT
             int "RIGHT"
+            default 17 if BOARD_ESP32
             default 7
             depends on !BUTTONS_LADDER
         config PIN_BTN_OK
             int "OK"
+            default 13 if BOARD_ESP32
             default 15
             depends on !BUTTONS_LADDER
         config PIN_BTN_BACK
             int "BACK"
+            default 15 if BOARD_ESP32
             default 16
             depends on !BUTTONS_LADDER
         config PIN_BTN_MORSE
             int "MORSE key"
+            default 12 if BOARD_ESP32
             default 17
             depends on !BUTTONS_LADDER
     endmenu
@@ -82,18 +98,22 @@ menu "Apocalypse Communicator - Wiring"
         comment "A missing LED role falls back to any LED that exists."
         config PIN_LED_RED
             int "Red (alert / SOS), -1 = none"
+            default 32 if BOARD_ESP32
             default -1 if BOARD_XIAO
             default 38
         config PIN_LED_GREEN
             int "Green (receive / status), -1 = none"
+            default 2 if BOARD_ESP32
             default 21 if BOARD_XIAO
             default 39
         config PIN_LED_BLUE
             int "Blue (transmit), -1 = none"
+            default 33 if BOARD_ESP32
             default -1 if BOARD_XIAO
             default 40
         config PIN_LED_WHITE
             int "White (signal light), -1 = none"
+            default 16 if BOARD_ESP32
             default -1 if BOARD_XIAO
             default 41
         config LED_ACTIVE_LOW
@@ -109,26 +129,32 @@ menu "Apocalypse Communicator - Wiring"
             default n
         config PIN_SPK_BCLK
             int "BCLK (amp BCLK, and mic SCK if shared)"
+            default 26 if BOARD_ESP32
             default 4 if BOARD_XIAO
             default 10
         config PIN_SPK_WS
             int "WS / LRC (amp LRC, and mic WS if shared)"
+            default 25 if BOARD_ESP32
             default 43 if BOARD_XIAO
             default 11
         config PIN_SPK_DIN
             int "Amp DIN, -1 = no speaker"
+            default 27 if BOARD_ESP32
             default 44 if BOARD_XIAO
             default 12
         config PIN_MIC_SD
             int "Mic SD (data), -1 = no mic"
+            default 34 if BOARD_ESP32
             default 3 if BOARD_XIAO
             default 18
         config PIN_MIC_SCK
             int "Mic SCK"
+            default 14 if BOARD_ESP32
             default 13
             depends on !AUDIO_SHARED_I2S
         config PIN_MIC_WS
             int "Mic WS"
+            default 13 if BOARD_ESP32
             default 14
             depends on !AUDIO_SHARED_I2S
     endmenu
@@ -138,7 +164,8 @@ menu "Apocalypse Communicator - Wiring"
             bool "Measure battery voltage"
             default y
         config PIN_BATTERY_ADC
-            int "Battery divider pin (ADC1, GPIO1-10)"
+            int "Battery divider pin (ADC1: S3 GPIO1-10, ESP32 GPIO32-39)"
+            default 39 if BOARD_ESP32
             default 2 if BOARD_XIAO
             default 1
             depends on BATTERY_ADC_ENABLE
@@ -151,7 +178,7 @@ menu "Apocalypse Communicator - Wiring"
     menu "LoRa radio"
         config LORA_ENABLE
             bool "Use a LoRa module if one is connected (safe if missing)"
-            default y if BOARD_XIAO
+            default y if BOARD_XIAO || BOARD_ESP32
             default n
         choice LORA_CHIP
             prompt "LoRa chip"
@@ -176,31 +203,37 @@ menu "Apocalypse Communicator - Wiring"
             depends on LORA_ENABLE
         config PIN_LORA_SCK
             int "SCK"
+            default 18 if BOARD_ESP32
             default 7 if BOARD_XIAO
             default 21
             depends on LORA_ENABLE
         config PIN_LORA_MISO
             int "MISO"
+            default 19 if BOARD_ESP32
             default 8 if BOARD_XIAO
             default 47
             depends on LORA_ENABLE
         config PIN_LORA_MOSI
             int "MOSI"
+            default 23 if BOARD_ESP32
             default 9 if BOARD_XIAO
             default 48
             depends on LORA_ENABLE
         config PIN_LORA_NSS
             int "NSS / CS"
+            default 5 if BOARD_ESP32
             default 41 if BOARD_XIAO
             default 42
             depends on LORA_ENABLE
         config PIN_LORA_RST
             int "RESET"
+            default 4 if BOARD_ESP32
             default 42 if BOARD_XIAO
             default 2
             depends on LORA_ENABLE
         config PIN_LORA_BUSY
             int "BUSY (SX1262 only)"
+            default 35 if BOARD_ESP32
             default 40 if BOARD_XIAO
             default 3
             depends on LORA_SX1262

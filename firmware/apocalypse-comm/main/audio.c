@@ -142,11 +142,7 @@ void audio_mic_enable(bool on)
 size_t audio_mic_read(int16_t *out, size_t n, uint32_t timeout_ms)
 {
     int32_t raw[256];
-#if CONFIG_AUDIO_SHARED_I2S
-    const int ST = 2;                           // stereo frames, mic on left slot
-#else
-    const int ST = 1;
-#endif
+    const int ST = 2;                           // stereo frames; mic is in one slot, the other is silent
     size_t got = 0;
     if (!s_mic_on) return 0;
     while (got < n) {
@@ -154,7 +150,7 @@ size_t audio_mic_read(int16_t *out, size_t n, uint32_t timeout_ms)
         if (i2s_channel_read(s_rx, raw, k * 4 * ST, &r, timeout_ms) != ESP_OK) break;
         r /= 4 * ST;
         for (size_t i = 0; i < r; i++) {
-            int32_t v = raw[i * ST] >> 13;      // 24-bit data in top bits, plus ~x8 gain
+            int32_t v = (raw[i * ST] >> 13) + (raw[i * ST + 1] >> 13);   // 24-bit data in top bits, ~x8 gain
             out[got + i] = v > 32767 ? 32767 : v < -32768 ? -32768 : v;
         }
         got += r;
@@ -205,18 +201,17 @@ void audio_init(void)
     if (mic >= 0 && i2s_new_channel(&rc, NULL, &s_rx) == ESP_OK) {
         i2s_std_config_t mc = {
             .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(AUDIO_RATE),
-            .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_MONO),
+            .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO),
             .gpio_cfg = {
                 .mclk = I2S_GPIO_UNUSED, .bclk = CONFIG_PIN_MIC_SCK, .ws = CONFIG_PIN_MIC_WS,
                 .dout = I2S_GPIO_UNUSED, .din = mic,
             },
         };
-        mc.slot_cfg.slot_mask = I2S_STD_SLOT_LEFT;
         if (i2s_channel_init_std_mode(s_rx, &mc) != ESP_OK) { i2s_del_channel(s_rx); s_rx = NULL; }
     }
 #endif
     if (s_tx) i2s_channel_enable(s_tx);
-    if (mic >= 0) gpio_pulldown_en(mic);        // a missing mic then reads silence, not noise
+    if (mic >= 0 && GPIO_IS_VALID_OUTPUT_GPIO(mic < 0 ? 0 : mic)) gpio_pulldown_en(mic);   // missing mic reads silence (ESP32 34-39: add a 100k resistor to GND)
     ESP_LOGI(TAG, "speaker %s, mic %s", s_tx ? "on" : "none", s_rx ? "on" : "none");
     xTaskCreate(fx_task, "sfx", 3072, NULL, 5, NULL);
     xTaskCreate(side_task, "side", 2048, NULL, 6, &s_side_task);

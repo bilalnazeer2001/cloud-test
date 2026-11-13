@@ -1,0 +1,2 @@
+# Log over the native USB port, so GPIO43/44 (XIAO D6/D7) are free for audio
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
