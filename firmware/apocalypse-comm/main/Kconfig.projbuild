@@ -51,6 +51,7 @@ menu "Apocalypse Communicator - Wiring"
         config PIN_BTN_LADDER
             int "Ladder analog pin (ADC1: S3 GPIO1-10, ESP32 GPIO32-39)"
             default 36 if BOARD_ESP32
+            default 4 if BOARD_DEVKIT
             default 1
             depends on BUTTONS_LADDER
         config LADDER_PULLUP_OHM
@@ -79,7 +80,7 @@ menu "Apocalypse Communicator - Wiring"
             depends on !BUTTONS_LADDER
         config PIN_BTN_OK
             int "OK"
-            default 13 if BOARD_ESP32
+            default 0 if BOARD_ESP32
             default 15
             depends on !BUTTONS_LADDER
         config PIN_BTN_BACK
@@ -98,6 +99,7 @@ menu "Apocalypse Communicator - Wiring"
         comment "A missing LED role falls back to any LED that exists."
         config PIN_LED_RED
             int "Red (alert / SOS), -1 = none"
+            default -1 if BOARD_ESP32 && !BUTTONS_LADDER
             default 32 if BOARD_ESP32
             default -1 if BOARD_XIAO
             default 38
@@ -108,11 +110,13 @@ menu "Apocalypse Communicator - Wiring"
             default 39
         config PIN_LED_BLUE
             int "Blue (transmit), -1 = none"
+            default -1 if BOARD_ESP32 && !BUTTONS_LADDER
             default 33 if BOARD_ESP32
             default -1 if BOARD_XIAO
             default 40
         config PIN_LED_WHITE
             int "White (signal light), -1 = none"
+            default -1 if BOARD_ESP32 && !BUTTONS_LADDER
             default 16 if BOARD_ESP32
             default -1 if BOARD_XIAO
             default 41
@@ -196,10 +200,9 @@ menu "Apocalypse Communicator - Wiring"
             default 433175
             depends on LORA_ENABLE
         config LORA_TX_POWER_DBM
-            int "Transmit power dBm"
+            int "Transmit power dBm (EU 868 MHz limit is 14, SX1276 max 17)"
             range 2 22
-            default 20 if LORA_SX1262
-            default 17
+            default 14
             depends on LORA_ENABLE
         config PIN_LORA_SCK
             int "SCK"

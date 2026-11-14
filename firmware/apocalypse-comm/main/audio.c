@@ -213,6 +213,6 @@ void audio_init(void)
     if (s_tx) i2s_channel_enable(s_tx);
     if (mic >= 0 && GPIO_IS_VALID_OUTPUT_GPIO(mic < 0 ? 0 : mic)) gpio_pulldown_en(mic);   // missing mic reads silence (ESP32 34-39: add a 100k resistor to GND)
     ESP_LOGI(TAG, "speaker %s, mic %s", s_tx ? "on" : "none", s_rx ? "on" : "none");
-    xTaskCreate(fx_task, "sfx", 3072, NULL, 5, NULL);
-    xTaskCreate(side_task, "side", 2048, NULL, 6, &s_side_task);
+    xTaskCreate(fx_task, "sfx", 4096, NULL, 5, NULL);
+    xTaskCreate(side_task, "side", 4096, NULL, 6, &s_side_task);
 }

@@ -17,6 +17,8 @@ void comm_init(void);
 void comm_rx(const uint8_t *data, int len, int rssi, uint8_t via);
 // Send a text message. Returns links actually used.
 uint8_t comm_send_text(const char *text, uint8_t type, uint8_t via_mask);
+// Same, but save=false does not store it in the inbox (used for SOS repeats).
+uint8_t comm_send(const char *text, uint8_t type, uint8_t via_mask, bool save);
 void comm_ping(void);
 int  comm_nodes(node_t *out, int max);      // newest first
 // UI polls this to pop up SOS alarms. Returns true once per SOS.

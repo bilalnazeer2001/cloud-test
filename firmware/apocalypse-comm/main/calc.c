@@ -47,6 +47,8 @@ static double postfix(void)
 
 static double power(void)
 {
+    skip();
+    if (*p == '-') { p++; return -power(); }        // so -2^2 = -4, and 2^-1 = 0.5
     double b = postfix();
     skip();
     if (*p == '^') { p++; return pow(b, power()); }   // right associative

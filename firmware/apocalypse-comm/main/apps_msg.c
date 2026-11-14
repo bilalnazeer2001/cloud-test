@@ -114,7 +114,7 @@ void app_sos(void)
         if (mode < 2 && (last_tx == 0 || now_ms() - last_tx > 30000)) {
             char t[MAX_TEXT + 1];
             snprintf(t, sizeof(t), "%s (#%lu)", text, (unsigned long)++count);
-            comm_send_text(t, PKT_SOS, VIA_RADIO);
+            comm_send(t, PKT_SOS, VIA_RADIO, count == 1);   // only the first one is saved
             last_tx = now_ms();
         }
         ui_header("SOS ACTIVE");

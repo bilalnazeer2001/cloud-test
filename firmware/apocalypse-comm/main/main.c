@@ -28,9 +28,9 @@ void app_main(void)
     disp_printf(80, 4, false, "v%s", FW_VERSION);
     disp_flush();
 
+    power_init();                 // ADC must be ready before the button task starts using it
     buttons_init();
     audio_init();
-    power_init();
     comm_init();
     espnow_link_init();
     lora_link_init();

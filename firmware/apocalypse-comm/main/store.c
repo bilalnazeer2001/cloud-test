@@ -45,6 +45,22 @@ void settings_save(void)
     nvs_close(h);
 }
 
+// Never trust flash contents blindly: a wrong value here must not become loud noise or a crash.
+static void sanitize(void)
+{
+    g_set.name[NAME_LEN - 1] = 0;
+    g_set.ap_pass[sizeof(g_set.ap_pass) - 1] = 0;
+    if (!g_set.name[0]) snprintf(g_set.name, NAME_LEN, "N%04X", (unsigned)(g_node_id & 0xFFFF));
+    if (g_set.channel < 1 || g_set.channel > 13) g_set.channel = 1;
+    if (g_set.volume > 10) g_set.volume = 10;
+    if (g_set.wpm < 5 || g_set.wpm > 30) g_set.wpm = 12;
+    if (g_set.tone_hz < 300 || g_set.tone_hz > 2000) g_set.tone_hz = 700;
+    if (g_set.tz_min < -840 || g_set.tz_min > 840) g_set.tz_min = 0;
+    uint8_t *b[] = {(uint8_t *)&g_set.relay, (uint8_t *)&g_set.long_range, (uint8_t *)&g_set.beacon,
+                    (uint8_t *)&g_set.modem_listen, (uint8_t *)&g_set.power_saver};
+    for (int i = 0; i < 5; i++) *b[i] = *b[i] != 0;
+}
+
 void settings_load(void)
 {
     uint8_t mac[6];
@@ -70,11 +86,11 @@ void settings_load(void)
         g_set.beacon = true;
         g_set.screen_s = 60;
         g_set.tz_min = 0;
-        // Random hotspot password, made once per device (never stored in source code)
-        static const char AL[] = "abcdefghjkmnpqrstuvwxyz23456789";
-        for (int i = 0; i < 8; i++) g_set.ap_pass[i] = AL[esp_random() % (sizeof(AL) - 1)];
+        // The hotspot password is made the first time the hotspot starts (see portal.c),
+        // because the hardware random generator is only fully random once Wi-Fi is running.
         settings_save();
     }
+    sanitize();
 }
 
 void store_init(void)

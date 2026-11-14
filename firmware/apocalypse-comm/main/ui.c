@@ -37,7 +37,7 @@ void ui_say(const char *text)
     if (!ui_headless() || !audio_has_speaker() || !text) return;
     if (!s_sayq) {
         s_sayq = xQueueCreate(1, MAX_TEXT + 24);
-        xTaskCreate(say_task, "say", 3072, NULL, 4, NULL);
+        xTaskCreate(say_task, "say", 4096, NULL, 4, NULL);
     }
     char buf[MAX_TEXT + 24] = {0};
     strncpy(buf, text, sizeof(buf) - 1);
@@ -136,7 +136,7 @@ bool ui_event(btn_ev_t *ev, uint32_t timeout_ms)
             }
             return true;
         }
-        if (g_set.screen_s && !s_screen_off && now_ms() - s_last_input > g_set.screen_s * 1000u) {
+        if (g_set.screen_s && disp_present() && !s_screen_off && now_ms() - s_last_input > g_set.screen_s * 1000u) {
             disp_power(false);
             s_screen_off = true;
         }

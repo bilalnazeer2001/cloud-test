@@ -5,6 +5,7 @@
 #include "leds.h"
 #include "morse.h"
 #include "display.h"
+#include "buttons.h"
 
 static const struct { char c; const char *m; } TABLE[] = {
     {'A', ".-"}, {'B', "-..."}, {'C', "-.-."}, {'D', "-.."}, {'E', "."}, {'F', "..-."},
@@ -43,16 +44,19 @@ static void element(uint32_t ms, bool on, bool sound, bool light)
     if (light) { led_set(LED_WHITE, false); led_set(LED_RED, false); if (!led_has_own(LED_WHITE)) disp_invert(false); }
 }
 
+// With no abort_flag, holding BACK stops the playback.
+#define STOPPED() ((abort_flag && *abort_flag) || (!abort_flag && buttons_is_down(BTN_BACK)))
+
 void morse_send(const char *text, uint8_t wpm, bool sound, bool light, volatile bool *abort_flag)
 {
     uint32_t dot = 1200 / (wpm ? wpm : 12);
     if (sound) audio_lock();
     for (const char *p = text; *p; p++) {
-        if (abort_flag && *abort_flag) break;
+        if (STOPPED()) break;
         if (*p == ' ') { element(dot * 4, false, sound, light); continue; }   // 3 after letter + 4 = 7
         const char *m = (*p == '#') ? "...---..." : morse_code(*p);
         if (!m) continue;
-        for (const char *e = m; *e && !(abort_flag && *abort_flag); e++) {
+        for (const char *e = m; *e && !STOPPED(); e++) {
             element(*e == '.' ? dot : dot * 3, true, sound, light);
             element(dot, false, sound, light);
         }

@@ -14,24 +14,40 @@ static const char *TAG = "comm";
 typedef struct { uint8_t data[sizeof(pkt_t)]; uint8_t len; int8_t rssi; uint8_t via; } rx_item_t;
 
 #define MAX_NODES 16
-#define SEEN_MAX  64
+#define SEEN_MAX  256
+#define MAX_TTL   6          // never relay more hops than we send ourselves (+1)
 
 static QueueHandle_t s_q;
 static SemaphoreHandle_t s_mx;
 static node_t s_nodes[MAX_NODES];
 static struct { uint32_t src, mid; } s_seen[SEEN_MAX];
 static int s_seen_i;
+static SemaphoreHandle_t s_seen_mx;
+static uint32_t s_last_alarm, s_last_pong;
 static volatile bool s_sos_new;
 static char s_sos_who[NAME_LEN + 1], s_sos_text[MAX_TEXT + 1];
 static uint32_t s_rx_count;
 
 static bool seen(uint32_t src, uint32_t mid)
 {
-    for (int i = 0; i < SEEN_MAX; i++) if (s_seen[i].src == src && s_seen[i].mid == mid) return true;
-    s_seen[s_seen_i].src = src;
-    s_seen[s_seen_i].mid = mid;
-    s_seen_i = (s_seen_i + 1) % SEEN_MAX;
-    return false;
+    bool found = false;
+    xSemaphoreTake(s_seen_mx, portMAX_DELAY);      // called from comm, UI and web tasks
+    for (int i = 0; i < SEEN_MAX && !found; i++) found = s_seen[i].src == src && s_seen[i].mid == mid;
+    if (!found) {
+        s_seen[s_seen_i].src = src;
+        s_seen[s_seen_i].mid = mid;
+        s_seen_i = (s_seen_i + 1) % SEEN_MAX;
+    }
+    xSemaphoreGive(s_seen_mx);
+    return found;
+}
+
+// "SOS - NEED HELP (#3)" and "(#4)" are the same message repeated: compare without the counter.
+static bool same_sos(const char *a, const char *b)
+{
+    const char *ma = strstr(a, " (#"), *mb = strstr(b, " (#");
+    size_t la = ma ? (size_t)(ma - a) : strlen(a), lb = mb ? (size_t)(mb - b) : strlen(b);
+    return la == lb && !memcmp(a, b, la);
 }
 
 static void node_update(const pkt_t *p, int rssi, uint8_t via)
@@ -88,17 +104,24 @@ static uint8_t tx(const pkt_t *p, uint8_t via)
     return used;
 }
 
-uint8_t comm_send_text(const char *text, uint8_t type, uint8_t via)
+uint8_t comm_send(const char *text, uint8_t type, uint8_t via, bool save)
 {
     pkt_t p;
     fill(&p, type, text);
     seen(p.src, p.mid);
     uint8_t used = tx(&p, via & ~VIA_PHONE);
-    msg_t m = {.src = g_node_id, .type = type, .via = used | (via & VIA_PHONE), .out = true, .read = true};
-    strncpy(m.name, g_set.name, NAME_LEN);
-    strncpy(m.text, p.text, MAX_TEXT);
-    store_add(&m);
+    if (save) {
+        msg_t m = {.src = g_node_id, .type = type, .via = used | (via & VIA_PHONE), .out = true, .read = true};
+        strncpy(m.name, g_set.name, NAME_LEN);
+        strncpy(m.text, p.text, MAX_TEXT);
+        store_add(&m);
+    }
     return used;
+}
+
+uint8_t comm_send_text(const char *text, uint8_t type, uint8_t via)
+{
+    return comm_send(text, type, via, true);
 }
 
 void comm_ping(void)
@@ -123,6 +146,8 @@ static void handle(rx_item_t *it)
     pkt_t p = {0};
     memcpy(&p, it->data, it->len);
     if (p.ver != PKT_VERSION || p.len > MAX_TEXT || it->len < (int)(PKT_HDR_LEN + p.len)) return;
+    if (p.type < PKT_MSG || p.type > PKT_PONG) return;     // unknown packet type: ignore, never relay
+    if (p.ttl > MAX_TTL) p.ttl = MAX_TTL;          // a hostile sender cannot make packets travel forever
     if (p.src == g_node_id) return;                // my own message echoed back
     if (seen(p.src, p.mid)) return;
     s_rx_count++;
@@ -133,18 +158,25 @@ static void handle(rx_item_t *it)
         msg_t m = {.src = p.src, .type = p.type, .via = it->via, .rssi = it->rssi, .hops = p.hops};
         memcpy(m.name, p.name, NAME_LEN);
         memcpy(m.text, p.text, p.len);
-        store_add(&m);
+        msg_t last;
+        bool repeat = p.type == PKT_SOS && store_get(0, &last) && last.type == PKT_SOS &&
+                      last.src == p.src && same_sos(last.text, m.text);
+        if (!repeat) store_add(&m);                // repeats of one SOS must not flood the inbox
         ESP_LOGI(TAG, "msg from %s via %s: %s", m.name, via_name(it->via), m.text);
         if (p.type == PKT_SOS) {
-            strcpy(s_sos_who, m.name);
-            strcpy(s_sos_text, m.text);
-            s_sos_new = true;
-            led_pulse(LED_RED, 3000);
-            audio_alarm();
+            if (!s_last_alarm || now_ms() - s_last_alarm > 10000) {    // limit alarm spam to 1 per 10 s
+                s_last_alarm = now_ms() ? now_ms() : 1;
+                strcpy(s_sos_who, m.name);
+                strcpy(s_sos_text, m.text);
+                s_sos_new = true;
+                led_pulse(LED_RED, 3000);
+                audio_alarm();
+            }
         } else {
             audio_alert();
         }
-    } else if (p.type == PKT_PING) {
+    } else if (p.type == PKT_PING && (!s_last_pong || now_ms() - s_last_pong > 5000)) {   // anti-amplification
+        s_last_pong = now_ms() ? now_ms() : 1;
         vTaskDelay(pdMS_TO_TICKS(50 + esp_random() % 400));   // avoid everyone answering at once
         pkt_t r;
         fill(&r, PKT_PONG, NULL);
@@ -204,5 +236,6 @@ void comm_init(void)
 {
     s_q = xQueueCreate(16, sizeof(rx_item_t));
     s_mx = xSemaphoreCreateMutex();
+    s_seen_mx = xSemaphoreCreateMutex();
     xTaskCreate(task, "comm", 6144, NULL, 8, NULL);
 }

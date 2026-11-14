@@ -8,6 +8,7 @@
 #include "esp_wifi.h"
 #include "esp_http_server.h"
 #include "esp_log.h"
+#include "esp_random.h"
 #include "app.h"
 #include "comm.h"
 #include "store.h"
@@ -147,10 +148,21 @@ static esp_err_t h_time(httpd_req_t *r)
     return httpd_resp_sendstr(r, "ok");
 }
 
+// Random 10-character password (about 50 bits), made once per device. Never stored in source code.
+static void ensure_password(void)
+{
+    if (g_set.ap_pass[0]) return;
+    static const char AL[] = "abcdefghjkmnpqrstuvwxyz23456789";
+    for (int i = 0; i < 10; i++) g_set.ap_pass[i] = AL[esp_random() % (sizeof(AL) - 1)];
+    g_set.ap_pass[10] = 0;
+    settings_save();
+}
+
 void portal_start(void)
 {
     if (s_http) return;
     if (!espnow_link_active()) espnow_link_enable(true);   // hotspot needs the Wi-Fi radio
+    ensure_password();                                     // Wi-Fi is on now, so the random numbers are real
     wifi_config_t ap = {0};
     snprintf((char *)ap.ap.ssid, sizeof(ap.ap.ssid), "FIELDCOMM-%s", g_set.name);
     ap.ap.ssid_len = strlen((char *)ap.ap.ssid);

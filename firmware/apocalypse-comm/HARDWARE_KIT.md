@@ -68,13 +68,13 @@ I simulated 160,000 random presses using cheap 5% resistors and ±40 mV ADC erro
 ## 2. Power: 1 main + 3 backup sources
 
 ```
- Solar panel 6V ──► CN3791 MPPT charger ──────┐
-                                              ├──► 18650 (protected) ──► switch ──► XIAO BAT pads
- Any 5V USB (crank / heat / car / powerbank)  │
-          ──► USB-C TP4056 charger (with      ┘
-              protection)
+ Solar panel 6V ──► CN3791 MPPT charger ──┐
+                                          ├──► 18650 (protected) ──► 2 A fuse ──► switch ──► XIAO BAT pads
+ Crank / heat / powerbank 5V              │
+          ──► TP4056 USB-C charger board ─┘      (use ONE charger board per cell, see Safety)
  3x AA lithium ──► Schottky diode (1N5817) ──► XIAO 5V pin   (emergency bypass, no charging needed)
 ```
+The XIAO has its own battery charger on the BAT pads. **Do not plug USB-C into the XIAO while an external charger is also connected to the same cell**: two chargers on one cell is not supported. Charge through the external board only, or through the XIAO's USB-C only.
 
 ### Main: 18650 Li-ion battery
 - 3000-3500 mAh, about 11-12 Wh, about the size of a finger. Buy a **protected** cell from a good brand.
@@ -176,3 +176,26 @@ The phone hotspot is still there, but it's **off by default** and nothing depend
 6. **Solar test:** put a USB meter or multimeter in line at noon and note the charge current.
 7. **Walkie-talkie test:** audio modem through two walkie-talkies.
 8. **Box test:** pack everything, shake it, carry it for a day, then unpack and run the self test.
+
+---
+
+## 7. Safety (please read before building)
+
+**Lithium cell (the biggest real hazard)**
+- Use a **protected** 18650 from a known brand. Check polarity twice before connecting. Put a **2 A fuse or resettable fuse** in the battery line.
+- **Never charge below 0 °C or above 45 °C.** TP4056 and CN3791 boards do not check temperature, and charging a frozen Li-ion cell damages it and can start a fire later. In freezing weather, warm the cell first or use the AA pack.
+- Don't leave the kit in a hot car or direct sun (over 60 °C). Don't charge inside the sealed IP67 box: open the lid or take the cell out.
+- Swollen, hot or dented cell: stop using it, put it outside on non-flammable ground.
+- Keep the power switch **OFF** in storage. The firmware warns at 10% battery, but it **does not switch itself off**: the protection circuit on the cell does that.
+
+**AA backup pack**
+- Use exactly **3** AA cells. Fresh lithium AAs give up to 5.4 V, and 4 cells would be too much for the XIAO's 5 V pin.
+
+**Radio**
+- Never transmit LoRa without its antenna fitted (it can destroy the radio chip). Fit the 2.4 GHz antenna too.
+- The firmware default is **14 dBm** and 868 MHz. Set the frequency and power that are **legal in your country** (menuconfig > LoRa radio). EU 868 MHz limits you to about 1% airtime, and the firmware does not count airtime for you.
+- Wi-Fi channels 12 and 13 are not allowed in some countries (for example the USA). Use channel 1, 6 or 11 if unsure.
+
+**Heat generator (TEG)**
+- Fire and hot metal: use it outdoors on bare ground, with the cold side water cup stable. Never use it indoors (carbon monoxide).
+

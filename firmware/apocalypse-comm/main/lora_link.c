@@ -129,7 +129,7 @@ void lora_link_init(void)
     wr(REG_FIFO_TX_BASE, 0x80);
     wr(REG_FIFO_RX_BASE, 0x00);
     wr(REG_LNA, 0x23);                                  // max gain, boost
-    wr(REG_PA_CONFIG, 0x80 | (CONFIG_LORA_TX_POWER_DBM - 2));   // PA_BOOST pin
+    wr(REG_PA_CONFIG, 0x80 | ((CONFIG_LORA_TX_POWER_DBM > 17 ? 17 : CONFIG_LORA_TX_POWER_DBM) - 2));   // PA_BOOST pin
     wr(REG_PA_DAC, 0x84);
     wr(REG_OCP, 0x2B);                                  // 100 mA
     wr(REG_MODEM1, 0x72);                               // BW 125k, CR 4/5, explicit header

@@ -86,8 +86,11 @@ Don't build your own transmitter from loose crystal oscillators: it will be weak
 - A licensed ham radio operator can also use the audio modem over VHF/UHF/HF for much longer range.
 - 32.768 kHz crystal is useful though: add a DS3231 real-time clock module later to keep time without a phone.
 
+## Safety and security
+See **[SAFETY_REVIEW.md](SAFETY_REVIEW.md)** (what was checked, fixed and is still open) and the Safety section of **[HARDWARE_KIT.md](HARDWARE_KIT.md)** (battery, charging, radio rules).
+
 ## Limits / honest notes
-- Messages are **not encrypted** - anyone with this firmware can read them. Don't send secrets.
+- Messages are **not encrypted or signed** - anyone in radio range can read them and fake messages. Don't send secrets.
 - Not tested on real hardware yet (this was written in the cloud). It compiles cleanly with ESP-IDF v5.3.2 for XIAO, DevKit, both LoRa chips and an "everything missing" setup. The audio modem, calculator and button ladder were tested on a PC.
 - The SX1262 driver follows the datasheet and the Wio-SX1262 pinout. Confirm it on hardware with two units.
 - Long Range Wi-Fi mode only talks to other ESP32s.

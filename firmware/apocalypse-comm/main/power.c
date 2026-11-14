@@ -15,18 +15,10 @@ static SemaphoreHandle_t s_mx;
 static struct { int gpio; adc_channel_t ch; adc_cali_handle_t cali; } s_ch[3];
 static int s_nch;
 
-static void adc_setup(void)
-{
-    if (s_adc) return;
-    s_mx = xSemaphoreCreateMutex();
-    adc_oneshot_unit_init_cfg_t uc = {.unit_id = ADC_UNIT_1};
-    if (adc_oneshot_new_unit(&uc, &s_adc) != ESP_OK) s_adc = NULL;
-}
 
 int adc_read_mv(int gpio)
 {
-    adc_setup();
-    if (!s_adc || gpio < 0) return -1;
+    if (!s_mx || !s_adc || gpio < 0) return -1;     // power_init() must run first (before buttons_init)
     xSemaphoreTake(s_mx, portMAX_DELAY);
     int i;
     for (i = 0; i < s_nch && s_ch[i].gpio != gpio; i++) {}
@@ -110,6 +102,8 @@ void power_apply_saver(void)
 
 void power_init(void)
 {
-    adc_setup();
+    s_mx = xSemaphoreCreateMutex();
+    adc_oneshot_unit_init_cfg_t uc = {.unit_id = ADC_UNIT_1};
+    if (adc_oneshot_new_unit(&uc, &s_adc) != ESP_OK) s_adc = NULL;
     power_battery_mv();
 }

@@ -80,13 +80,13 @@ bool disp_init(void)
         .flags.enable_internal_pullup = true,
     };
     if (i2c_new_master_bus(&bc, &s_bus) != ESP_OK) return false;
-    s_bus_ok = true;
     i2c_device_config_t dc = {
         .dev_addr_length = I2C_ADDR_BIT_LEN_7,
         .device_address = CONFIG_OLED_ADDR,
         .scl_speed_hz = 400000,
     };
     if (i2c_master_bus_add_device(s_bus, &dc, &s_dev) != ESP_OK) return false;
+    s_bus_ok = true;                         // only now is s_dev valid (probe() uses it)
 
     s_ok = probe();
     if (!s_ok) ESP_LOGW(TAG, "no OLED at 0x%02X - running without screen", CONFIG_OLED_ADDR);
