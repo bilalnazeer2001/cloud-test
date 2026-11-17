@@ -68,11 +68,15 @@ const cupboard = doors => (w, h, d) => [
   }).flat(),
 ];
 
+const handles = (w, h, d) => {
+  const n = Math.max(1, Math.round(w / 0.5));
+  return Array.from({ length: n }, (_, i) => box(0.14, 0.02, 0.02, -w / 2 + (w / n) * (i + 0.5), h - 0.16, d / 2 - 0.02, CHROME));
+};
 const counter = (extra = () => []) => (w, h, d) => [
   box(w, h - 0.14, d - 0.04, 0, 0.1, -0.02),
   box(w, 0.1, d - 0.1, 0, 0, -0.03, DARK),
   box(w, 0.04, d, 0, h - 0.04, 0, 'accent'),
-  ...Array.from({ length: Math.max(1, Math.round(w / 0.5)) }, (_, i, a) => box(0.14, 0.02, 0.02, -w / 2 + (w / a.length) * (i + 0.5), h - 0.16, d / 2 - 0.02, CHROME)),
+  ...handles(w, h, d),
   ...extra(w, h, d),
 ];
 

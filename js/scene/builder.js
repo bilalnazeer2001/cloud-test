@@ -317,7 +317,8 @@ export function buildRoof(group) {
       const n = nrm(pts[0], pts[1], pts[2]);
       for (let i = 1; i + 1 < pts.length; i++) {
         acc.tri(k, pts[0], pts[i], pts[i + 1], n, uvs[0], uvs[i], uvs[i + 1], pick);
-        acc.tri(under, pts[0], pts[i], pts[i + 1], [-n[0], -n[1], -n[2]], uvs[0], uvs[i], uvs[i + 1], pick);
+        const dn = p => [p[0] - n[0] * 0.04, p[1] - n[1] * 0.04, p[2] - n[2] * 0.04];
+        acc.tri(under, dn(pts[0]), dn(pts[i]), dn(pts[i + 1]), [-n[0], -n[1], -n[2]], uvs[0], uvs[i], uvs[i + 1], pick);
       }
     };
     if (roof.type === 'hip') {

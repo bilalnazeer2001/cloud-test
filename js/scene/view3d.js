@@ -77,7 +77,7 @@ export function initView3D(el) {
   resize();
   let last = performance.now();
   renderer.setAnimationLoop(() => {
-    const now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now;
     if (dirty) rebuild();
     if (app.mode === 'walk') { walker.update(dt); needsRender = true; }
     if (needsRender && container.offsetParent !== null) {
@@ -140,7 +140,10 @@ function rebuild() {
   updateHighlight();
   renderer.shadowMap.needsUpdate = true;
   needsRender = true;
+  if (!framed) { framed = true; frameHouse(); }
 }
+let framed = false;
+export function reframeOnNextBuild() { framed = false; dirty = true; }
 
 function houseBounds() {
   const box = new THREE.Box3();

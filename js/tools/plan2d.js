@@ -32,11 +32,13 @@ export function initPlan(el) {
 }
 export const redrawPlan = () => { needsDraw = true; };
 
+let fitted = false;
 function resize() {
   DPR = Math.min(2, window.devicePixelRatio || 1);
   W = wrap.clientWidth || 1; H = wrap.clientHeight || 1;
   canvas.width = W * DPR; canvas.height = H * DPR;
   canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  if (!fitted && W > 50 && H > 50 && app.project) fitPlan();
   needsDraw = true;
 }
 
@@ -44,6 +46,7 @@ function resize() {
 export function fitPlan() {
   const pts = [];
   for (const l of app.project.levels) for (const w of l.walls) pts.push(w.a, w.b);
+  if (W > 50 && H > 50) fitted = true;
   if (!pts.length) { view.scale = 40; view.ox = W / 2; view.oy = H / 2; needsDraw = true; return; }
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const p of pts) { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
@@ -106,6 +109,9 @@ function draw() {
     const fs = Math.max(10, Math.min(15, view.scale * 0.32));
     c.textAlign = 'center'; c.textBaseline = 'middle';
     c.font = `600 ${fs}px system-ui, sans-serif`;
+    const tw = Math.max(c.measureText(r.meta.name).width, fs * 3.2) + 10;
+    c.fillStyle = 'rgba(255,255,255,0.72)';
+    c.beginPath(); c.roundRect ? c.roundRect(s.x - tw / 2, s.y - fs * 1.25, tw, fs * 2.5, 6) : c.rect(s.x - tw / 2, s.y - fs * 1.25, tw, fs * 2.5); c.fill();
     c.fillStyle = '#2b2a27';
     c.fillText(r.meta.name, s.x, s.y - fs * 0.6);
     c.font = `${fs * 0.85}px system-ui, sans-serif`;
@@ -219,7 +225,7 @@ function drawFurniture(c, f) {
   c.beginPath(); c.moveTo(corners[3].x, corners[3].y); c.lineTo(corners[2].x, corners[2].y); c.stroke();
   c.globalAlpha = 1;
   const minSide = Math.min(f.w, f.d) * view.scale;
-  if (minSide > 18 && Math.max(f.w, f.d) * view.scale > 44) {
+  if (!def.mount && minSide > 18 && Math.max(f.w, f.d) * view.scale > 44) {
     const s = toS(f);
     c.save(); c.translate(s.x, s.y);
     let ang = -(f.rot || 0);
