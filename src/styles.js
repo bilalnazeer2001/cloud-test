@@ -43,7 +43,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   --cover:transparent;
   --ring:#ffffff;--shadow:0 8px 24px rgba(40,8,70,.22);
   --display:inherit;color-scheme:light}
-[data-theme="colourful"] body{background:linear-gradient(165deg,#e8453c 0%,#cf1f72 42%,#5b2fd6 100%) fixed}
+[data-theme="colourful"] body{background:linear-gradient(165deg,#e8453c 0%,#cf1f72 42%,#5b2fd6 100%)}
 [data-theme="colourful"] .quick a:nth-child(4n+2) .ico-wrap,[data-theme="colourful"] .links li:nth-child(3n+2) .ico-wrap{color:#5b2fd6;background:#eee9fd}
 [data-theme="colourful"] .quick a:nth-child(4n+3) .ico-wrap,[data-theme="colourful"] .links li:nth-child(3n+3) .ico-wrap{color:#d2511a;background:#fdeee4}
 
@@ -80,7 +80,8 @@ h1{margin:16px 0 0;font-size:clamp(1.65rem,7.2vw,2rem);line-height:1.2;font-weig
   background:var(--surface);border:1px solid var(--line);font-weight:600;box-shadow:var(--shadow);
   transition:transform .15s ease;min-width:0}
 .quick a:last-child:nth-child(odd){grid-column:1/-1}
-.quick span.t{min-width:0;overflow-wrap:anywhere;line-height:1.3}
+.quick span.t{min-width:0;overflow-wrap:break-word;line-height:1.3}
+:lang(ml) .quick a{font-size:.86rem;gap:9px;padding-inline:10px}
 .ico-wrap{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--icon-bg);color:var(--icon)}
 .ico{width:20px;height:20px;display:block}
 
@@ -114,7 +115,7 @@ dialog::backdrop{background:rgba(0,0,0,.55)}
 .sheet{padding:22px;display:grid;gap:14px;justify-items:center;text-align:center}
 .sheet img{width:220px;height:220px;border-radius:14px;background:#fff;padding:6px;display:block}
 .sheet p{margin:0;color:var(--muted);font-size:.92rem}
-.sheet .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.sheet .row{display:grid;gap:8px;width:100%}
 .sheet button{min-height:48px;border-radius:14px;border:1px solid var(--line);background:transparent;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
 [data-theme="colourful"] .sheet button{border-color:#e3deee}
 .sheet button.pri{background:var(--accent);color:var(--on-accent);border:0}

@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Client card maker</title>
+<!--
+  HOW TO USE: double-click this file to open it in your browser. Nothing is uploaded -
+  everything stays on your computer. Fill in the form, press "Download client file",
+  and put the downloaded file into the "clients" folder.
+-->
+<style>
+  :root{--bg:#f4f4f1;--panel:#fff;--ink:#17191e;--muted:#646a76;--line:#dcdad3;--accent:#1f5eff;--ok:#0f7b4f;--warn:#9a5b00;--warn-bg:#fff6e0}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header.top{padding:20px 20px 0;max-width:1180px;margin:0 auto}
+  header.top h1{margin:0;font-size:1.5rem}
+  header.top p{margin:4px 0 0;color:var(--muted)}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px;display:grid;gap:24px;grid-template-columns:minmax(0,1fr) 400px;align-items:start}
+  @media(max-width:900px){.wrap{grid-template-columns:minmax(0,1fr)}.side{position:static!important}}
+  fieldset{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:18px;margin:0 0 16px;min-width:0}
+  legend{font-weight:700;padding:0 8px;font-size:1.02rem}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  label{display:grid;gap:5px;font-weight:600;font-size:.92rem;min-width:0}
+  label small,.hint{font-weight:400;color:var(--muted);font-size:.82rem}
+  input[type=text],input[type=tel],input[type=email],input[type=url],select,textarea{
+    font:inherit;padding:11px 12px;border:1px solid #c4c2ba;border-radius:10px;background:#fff;color:inherit;width:100%;min-width:0}
+  textarea{min-height:84px;resize:vertical}
+  input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35%,transparent);outline-offset:1px;border-color:var(--accent)}
+  .full{grid-column:1/-1}
+  .themes{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+  .themes label{cursor:pointer;border:2px solid var(--line);border-radius:12px;padding:10px;text-align:center;gap:8px}
+  .themes input{position:absolute;opacity:0}
+  .themes label:has(input:checked){border-color:var(--accent);background:#f1f5ff}
+  .themes label:has(input:focus-visible){outline:3px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+  .sw{height:44px;border-radius:8px;border:1px solid rgba(0,0,0,.12)}
+  .sw.light{background:linear-gradient(135deg,#d9e4f7,#f8e9db)}
+  .sw.dark{background:linear-gradient(135deg,#0f3d33,#12151a 50%,#232a5c)}
+  .sw.gold{background:linear-gradient(135deg,#0e0c08 30%,#b98a2c,#f1d98c)}
+  .sw.colourful{background:linear-gradient(165deg,#e8453c,#cf1f72 45%,#5b2fd6)}
+  .inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-weight:400}
+  .inline input[type=checkbox]{width:18px;height:18px}
+  .photo{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .photo img,.photo .ph{width:84px;height:84px;border-radius:50%;object-fit:cover;background:#e9e7e0;display:grid;place-items:center;color:var(--muted);font-size:.8rem;flex:none}
+  button,.btn{font:inherit;font-weight:600;border-radius:10px;border:1px solid #c4c2ba;background:#fff;color:inherit;padding:10px 16px;cursor:pointer}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-size:1.02rem;padding:14px 20px;width:100%}
+  button.link{border:0;background:none;color:#a11;padding:6px;font-weight:500}
+  .linkrow{display:grid;grid-template-columns:1fr 1.4fr auto;gap:8px;margin-bottom:8px}
+  @media(max-width:520px){.linkrow{grid-template-columns:1fr}}
+  .side{position:sticky;top:16px;display:grid;gap:14px}
+  .phone{background:#111;border-radius:36px;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+  .phone iframe{display:block;width:100%;height:640px;border:0;border-radius:27px;background:#fff}
+  .actions{display:grid;gap:10px}
+  .actions .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  #msgs{font-size:.9rem}
+  #msgs div{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:8px 12px;margin-bottom:6px}
+  #msgs div.err{background:#fde8e8;color:#9b1c1c}
+  #done{display:none;background:#e7f6ee;color:var(--ok);border-radius:10px;padding:12px;font-size:.92rem}
+  code{background:#eceae4;padding:1px 6px;border-radius:5px;font-size:.9em}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Client card maker</h1>
+  <p>Fill this in, check the preview, then download the client file. Nothing leaves your computer.</p>
+</header>
+
+<div class="wrap">
+<form id="f" autocomplete="off" onsubmit="return false">
+
+  <fieldset>
+    <legend>1 · Who is it?</legend>
+    <div class="grid">
+      <label>Full name *<input type="text" id="name" required></label>
+      <label>Job title<input type="text" id="title"></label>
+      <label>Company<input type="text" id="company"></label>
+      <label>Language of the page
+        <select id="lang">
+          <option value="en">English</option>
+          <option value="ar">Arabic (right-to-left)</option>
+          <option value="ml">Malayalam</option>
+        </select>
+        <small>Sets the button words (Call, Save Contact…) and text direction.</small>
+      </label>
+      <label class="full">Short bio<textarea id="bio" maxlength="300"></textarea><small>One or two sentences. You can type in any language.</small></label>
+      <label class="full">Page address *
+        <input type="text" id="slug" placeholder="e.g. ahmed-khan" spellcheck="false">
+        <small id="slugHint">Small English letters, numbers and dashes only. This is what is written to the NFC card: <code>your-site/<span id="slugShow">…</span>/</code></small>
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>2 · Photo and look</legend>
+    <div class="photo">
+      <span id="photoBox"><span class="ph">No photo</span></span>
+      <div>
+        <input type="file" id="photoFile" accept="image/*" hidden>
+        <button type="button" id="photoPick">Choose photo…</button>
+        <button type="button" class="link" id="photoClear" hidden>Remove</button>
+        <div class="hint">Any size is fine – it is cropped square and shrunk automatically. Without a photo the page shows initials.</div>
+      </div>
+    </div>
+    <p style="margin:16px 0 8px;font-weight:600;font-size:.92rem">Theme</p>
+    <div class="themes">
+      <label><input type="radio" name="theme" value="light" checked><span class="sw light"></span>Clean light</label>
+      <label><input type="radio" name="theme" value="dark"><span class="sw dark"></span>Dark</label>
+      <label><input type="radio" name="theme" value="gold"><span class="sw gold"></span>Gold / premium</label>
+      <label><input type="radio" name="theme" value="colourful"><span class="sw colourful"></span>Colourful</label>
+    </div>
+    <label class="inline" style="margin-top:14px"><input type="checkbox" id="useAccent"> Use the client's brand colour for the main button
+      <input type="color" id="accent" value="#1f5eff" aria-label="Brand colour"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>3 · Contact buttons</legend>
+    <div class="grid">
+      <label>Phone<input type="tel" id="phone" placeholder="+971 50 123 4567"><small>Include the country code.</small></label>
+      <label>WhatsApp number<input type="tel" id="whatsapp" placeholder="+971 50 123 4567">
+        <span class="inline"><input type="checkbox" id="sameWa" checked> Same as phone</span></label>
+      <label class="full">WhatsApp opening message (optional)<input type="text" id="whatsappMessage" placeholder="Hi, I got your card…"></label>
+      <label>Email<input type="email" id="email" placeholder="name@company.com"></label>
+      <label>Website<input type="url" id="website" placeholder="https://company.com"></label>
+      <label class="full">Address (for the Location button)<input type="text" id="address" placeholder="Building, area, city, country"></label>
+      <label class="full">Google Maps link (optional)<input type="url" id="mapsUrl" placeholder="https://maps.app.goo.gl/…"><small>Paste a share link from Google Maps for an exact pin. If empty, the address is searched.</small></label>
+    </div>
+    <p class="hint" style="margin:12px 0 0">Leave anything blank and that button simply won't appear.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>4 · Social media</legend>
+    <p class="hint" style="margin:0 0 12px">Type just the username (like <code>studio.oryx</code>) or paste the full link.</p>
+    <div class="grid" id="socials"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>5 · Extra buttons (optional)</legend>
+    <p class="hint" style="margin:0 0 12px">For anything else – a menu, a booking page, a PDF brochure.</p>
+    <div id="links"></div>
+    <button type="button" id="addLink">+ Add a button</button>
+  </fieldset>
+</form>
+
+<aside class="side">
+  <div class="phone"><iframe id="preview" title="Live preview of the profile page"></iframe></div>
+  <div id="msgs" aria-live="polite"></div>
+  <div class="actions">
+    <button type="button" class="primary" id="download">Download client file</button>
+    <div id="done"></div>
+    <div class="two">
+      <button type="button" id="open">Open existing…</button>
+      <button type="button" id="reset">Start new</button>
+    </div>
+    <input type="file" id="openFile" accept=".json,application/json" hidden>
+  </div>
+</aside>
+</div>
+
+<script src="src/core.js"></script>
+<script src="src/icons.js"></script>
+<script src="src/styles.js"></script>
+<script src="src/template.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  if (!window.NFCCore || !window.NFCTemplate) {
+    document.body.insertAdjacentHTML('afterbegin', '<p style="background:#fde8e8;color:#9b1c1c;padding:16px;margin:0">This file must stay in the project folder, next to the <b>src</b> folder. Open it from there.</p>');
+    return;
+  }
+  var core = NFCCore;
+  var TEXT = ['name', 'title', 'company', 'bio', 'phone', 'whatsapp', 'whatsappMessage', 'email', 'website', 'address', 'mapsUrl'];
+  var photo = '';          // data: URL, or a path kept from an opened file
+  var slugTouched = false;
+  var DRAFT = 'nfc-admin-draft';
+
+  // social inputs
+  Object.keys(core.SOCIALS).forEach(function (k) {
+    $('socials').insertAdjacentHTML('beforeend', '<label>' + core.SOCIALS[k].label + '<input type="text" id="s_' + k + '" spellcheck="false"></label>');
+  });
+
+  function addLink(label, url) {
+    var row = document.createElement('div');
+    row.className = 'linkrow';
+    row.innerHTML = '<input type="text" placeholder="Button text, e.g. Our menu" aria-label="Button text">' +
+      '<input type="url" placeholder="https://…" aria-label="Link"><button type="button" class="link">Remove</button>';
+    row.children[0].value = label || ''; row.children[1].value = url || '';
+    row.children[2].onclick = function () { row.remove(); update(); };
+    $('links').appendChild(row);
+  }
+  $('addLink').onclick = function () { addLink(); };
+
+  // ---- read the form into a plain object (this is exactly what gets saved) ----
+  function collect() {
+    var o = {};
+    function put(k, v) { v = String(v || '').trim(); if (v) o[k] = v; }
+    put('slug', $('slug').value);
+    put('name', $('name').value); put('title', $('title').value); put('company', $('company').value); put('bio', $('bio').value);
+    o.lang = $('lang').value;
+    o.theme = document.querySelector('input[name=theme]:checked').value;
+    if ($('useAccent').checked) o.accent = $('accent').value;
+    if (photo) o.photo = photo;
+    put('phone', $('phone').value);
+    put('whatsapp', $('sameWa').checked ? $('phone').value : $('whatsapp').value);
+    put('whatsappMessage', $('whatsappMessage').value);
+    put('email', $('email').value); put('website', $('website').value); put('address', $('address').value); put('mapsUrl', $('mapsUrl').value);
+    var soc = {};
+    Object.keys(core.SOCIALS).forEach(function (k) { var v = $('s_' + k).value.trim(); if (v) soc[k] = v; });
+    if (Object.keys(soc).length) o.socials = soc;
+    var links = [];
+    [].forEach.call($('links').children, function (r) {
+      var l = r.children[0].value.trim(), u = r.children[1].value.trim();
+      if (l || u) links.push({ label: l, url: u });
+    });
+    if (links.length) o.links = links;
+    return o;
+  }
+
+  // ---- put an object back into the form ----
+  function fill(o) {
+    o = o || {};
+    TEXT.forEach(function (k) { $(k).value = o[k] || ''; });
+    $('slug').value = o.slug || '';
+    slugTouched = !!o.slug;
+    $('lang').value = core.LANGS[o.lang] ? o.lang : 'en';
+    var th = o.theme === 'colorful' ? 'colourful' : o.theme;
+    (document.querySelector('input[name=theme][value="' + (core.THEMES.indexOf(th) >= 0 ? th : 'light') + '"]')).checked = true;
+    $('useAccent').checked = /^#[0-9a-f]{6}$/i.test(o.accent || '');
+    if ($('useAccent').checked) $('accent').value = o.accent;
+    $('sameWa').checked = !o.whatsapp || o.whatsapp === o.phone;
+    if ($('sameWa').checked) $('whatsapp').value = '';
+    Object.keys(core.SOCIALS).forEach(function (k) { $('s_' + k).value = ''; });
+    var soc = o.socials || {};
+    Object.keys(soc).forEach(function (k) { var key = k.toLowerCase() === 'twitter' ? 'x' : k.toLowerCase(); if ($('s_' + key)) $('s_' + key).value = soc[k]; });
+    $('links').innerHTML = '';
+    (o.links || []).forEach(function (l) { addLink(l.label, l.url); });
+    photo = o.photo || '';
+    showPhoto();
+    update();
+  }
+
+  function photoPreviewSrc() {
+    if (!photo) return '';
+    return /^(data:|https?:)/i.test(photo) ? photo : 'clients/' + photo;
+  }
+  function showPhoto() {
+    var src = photoPreviewSrc();
+    $('photoBox').innerHTML = src ? '<img alt="Chosen photo">' : '<span class="ph">No photo</span>';
+    if (src) $('photoBox').firstChild.src = src;
+    $('photoClear').hidden = !photo;
+  }
+
+  // shrink + square-crop the chosen photo so pages stay fast
+  $('photoPick').onclick = function () { $('photoFile').click(); };
+  $('photoClear').onclick = function () { photo = ''; showPhoto(); update(); };
+  $('photoFile').onchange = function () {
+    var file = this.files[0]; this.value = '';
+    if (!file) return;
+    var img = new Image();
+    img.onload = function () {
+      var size = 480, c = document.createElement('canvas'); c.width = c.height = size;
+      var s = Math.min(img.naturalWidth, img.naturalHeight);
+      var ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, size, size);
+      photo = c.toDataURL('image/jpeg', 0.85);
+      URL.revokeObjectURL(img.src);
+      showPhoto(); update();
+    };
+    img.onerror = function () { alert('That file could not be read as a picture. Please try a JPG or PNG.'); };
+    img.src = URL.createObjectURL(file);
+  };
+
+  // ---- live preview ----
+  var timer;
+  function update() { clearTimeout(timer); timer = setTimeout(render, 200); }
+  function render() {
+    if (!slugTouched) $('slug').value = core.slugify($('name').value);
+    $('slugShow').textContent = $('slug').value || '…';
+    $('whatsapp').disabled = $('sameWa').checked;
+    $('accent').disabled = !$('useAccent').checked;
+
+    var raw = collect();
+    var r = core.normalize(Object.assign({}, raw, { name: raw.name || 'Client name' }), raw.slug || 'preview');
+    var msgs = r.errors.map(function (m) { return '<div class="err">' + core.esc(m) + '</div>'; })
+      .concat(r.warnings.map(function (m) { return '<div>' + core.esc(m) + '</div>'; }));
+    if ($('name').value.trim() && !$('slug').value.trim()) msgs.unshift('<div class="err">Please type a page address in English letters (for example the name written in English).</div>');
+    $('msgs').innerHTML = msgs.join('');
+    if (r.profile) {
+      var html = NFCTemplate.render(r.profile, { photoSrc: photoPreviewSrc(), vcfHref: '#', qrSrc: '', brand: {} });
+      // in the preview: no entrance animation, and links don't leave the page
+      html = html.replace('</head>', '<style>*{animation:none!important}</style><base target="_blank"></head>');
+      var fr = $('preview'), y = 0;
+      try { y = fr.contentWindow.scrollY; } catch (e) {}
+      fr.srcdoc = html;
+      fr.onload = function () { try { fr.contentWindow.scrollTo(0, y); } catch (e) {} };
+    }
+    try { localStorage.setItem(DRAFT, JSON.stringify(raw)); } catch (e) {}
+    $('done').style.display = 'none';
+  }
+
+  $('f').addEventListener('input', function (e) { if (e.target.id === 'slug') slugTouched = !!e.target.value; update(); });
+  $('f').addEventListener('change', update);
+  $('slug').addEventListener('blur', function () { if (this.value) this.value = core.slugify(this.value); update(); });
+
+  // ---- download ----
+  $('download').onclick = function () {
+    render();
+    var raw = collect();
+    if (!raw.name) { alert('Please type the client\'s name first.'); $('name').focus(); return; }
+    var check = core.normalize(raw, raw.slug);
+    if (!raw.slug || check.errors.length) { alert(check.errors[0] || 'Please type a page address in English letters, numbers and dashes.'); $('slug').focus(); return; }
+    var name = raw.slug + '.json';
+    delete raw.slug;   // the file name is the address, so there is only one place to change it
+    var blob = new Blob([JSON.stringify(raw, null, 2) + '\n'], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    $('done').innerHTML = '<b>Saved ' + core.esc(name) + '</b> (look in your Downloads folder).<br>Next: move it into the <code>clients</code> folder, then build the site. The README explains how.';
+    $('done').style.display = 'block';
+  };
+
+  // ---- open an existing client file ----
+  $('open').onclick = function () { $('openFile').click(); };
+  $('openFile').onchange = function () {
+    var file = this.files[0]; this.value = '';
+    if (!file) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      try {
+        var o = JSON.parse(String(rd.result).replace(/^﻿/, ''));
+        if (!o.slug) o.slug = core.slugify(file.name.replace(/\.json$/i, ''));
+        fill(o);
+      } catch (e) { alert('That file could not be read. Please choose a client file from the clients folder.'); }
+    };
+    rd.readAsText(file);
+  };
+  $('reset').onclick = function () {
+    if (!confirm('Clear the form and start a new client?')) return;
+    try { localStorage.removeItem(DRAFT); } catch (e) {}
+    fill({});
+  };
+
+  // restore unfinished work
+  var draft = null;
+  try { draft = JSON.parse(localStorage.getItem(DRAFT) || 'null'); } catch (e) {}
+  fill(draft || {});
+})();
+</script>
+</body>
+</html>
