@@ -2,20 +2,44 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hello from the cloud</title>
-<style>
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center;
-         font-family: system-ui, sans-serif; background: #f6f4ef; color: #222; }
-  main { text-align: center; padding: 2rem; }
-  h1 { font-size: clamp(2rem, 6vw, 3.5rem); margin: 0 0 .5rem; }
-  p { color: #666; font-size: 1.1rem; margin: 0; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bench Tools</title>
+<meta name="description" content="Offline electronics and 3D-print calculators: PCB trace width, resistors, LEDs, dividers, buck/boost, RC filters, ESP32 pinouts and print cost.">
+<meta name="theme-color" content="#a8501a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="css/style.css">
+<script>
+  try { var t = localStorage.getItem('bt:theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
 </head>
-<body>
-<main>
-  <h1>Hello from the cloud</h1>
-  <p>This page was built as a test for Claude Code on the web.</p>
-</main>
+<body class="at-home">
+<div class="app">
+  <aside class="nav" id="nav">
+    <header class="brand">
+      <a href="#/" class="brand-name">
+        <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="7" fill="var(--accent)"/><path d="M7 22h7l5-10h6" fill="none" stroke="var(--accent-ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="22" r="2.6" fill="var(--accent-ink)"/><circle cx="25" cy="12" r="2.6" fill="var(--accent-ink)"/></svg>
+        <span>Bench Tools</span>
+      </a>
+      <button type="button" id="theme" class="icon-btn" aria-label="Switch light or dark theme" title="Light / dark"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg></button>
+    </header>
+    <div class="search">
+      <label class="sr" for="q">Search tools</label>
+      <input id="q" type="search" placeholder="Search — LED, trace, GPIO, STL…" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <nav id="list" aria-label="Tools"></nav>
+    <p class="foot" id="status">All calculations run on this device.</p>
+  </aside>
+  <main id="view" tabindex="-1"></main>
+</div>
+<noscript><p style="padding:1rem">Bench Tools needs JavaScript turned on to run its calculators.</p></noscript>
+<script src="js/core.js"></script>
+<script src="js/tools-basic.js"></script>
+<script src="js/tools-power.js"></script>
+<script src="js/tools-colour.js"></script>
+<script src="js/tools-pinout.js"></script>
+<script src="js/tools-print.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
