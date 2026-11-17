@@ -1,0 +1,15 @@
+{
+  "baseUrl": "https://example.com",
+  "brand": {
+    "name": "Your Brand",
+    "url": ""
+  },
+  "home": {
+    "title": "Digital Business Cards",
+    "listClients": false
+  },
+  "analytics": {
+    "enabled": false,
+    "endpoint": ""
+  }
+}

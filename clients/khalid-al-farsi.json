@@ -1,0 +1,18 @@
+{
+  "name": "خالد الفارسي",
+  "title": "مستشار عقاري",
+  "company": "دار الفارسي للعقارات",
+  "bio": "أساعدك في شراء وبيع وتأجير العقارات الفاخرة في أبوظبي بثقة وشفافية.",
+  "lang": "ar",
+  "theme": "gold",
+  "phone": "+971 50 000 0002",
+  "whatsapp": "+971 50 000 0002",
+  "email": "khalid@example.com",
+  "website": "https://example.com/alfarsi",
+  "address": "Al Reem Island, Abu Dhabi, UAE",
+  "socials": {
+    "instagram": "alfarsi.realestate",
+    "x": "alfarsi_re",
+    "snapchat": "alfarsi.re"
+  }
+}

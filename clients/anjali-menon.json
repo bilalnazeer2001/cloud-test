@@ -1,0 +1,18 @@
+{
+  "name": "അഞ്ജലി മേനോൻ",
+  "title": "സ്ഥാപക, ഹെഡ് ബേക്കർ",
+  "company": "മധുരം ബേക്ക്സ്",
+  "bio": "കൊച്ചിയിലെ ഹോം ബേക്കറി. കസ്റ്റം കേക്കുകളും കുക്കികളും ആഘോഷങ്ങൾക്കുള്ള മധുരപലഹാരങ്ങളും.",
+  "lang": "ml",
+  "theme": "colourful",
+  "phone": "+91 90000 00003",
+  "whatsapp": "+91 90000 00003",
+  "whatsappMessage": "ഹായ്, ഒരു കേക്ക് ഓർഡർ ചെയ്യാൻ ആഗ്രഹിക്കുന്നു.",
+  "email": "anjali@example.com",
+  "address": "Panampilly Nagar, Kochi, Kerala, India",
+  "socials": {
+    "instagram": "madhuram.bakes",
+    "facebook": "madhurambakes",
+    "youtube": "madhurambakes"
+  }
+}

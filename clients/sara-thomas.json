@@ -1,0 +1,23 @@
+{
+  "name": "Sara Thomas",
+  "title": "Interior Designer",
+  "company": "Studio Oryx",
+  "bio": "Calm, practical interiors for homes and small offices across Dubai and Sharjah.",
+  "lang": "en",
+  "theme": "light",
+  "photo": "photos/sara-thomas.svg",
+  "phone": "+971 50 000 0001",
+  "whatsapp": "+971 50 000 0001",
+  "whatsappMessage": "Hi Sara, I got your card and would like to talk about a project.",
+  "email": "sara@example.com",
+  "website": "https://example.com/studio-oryx",
+  "address": "Dubai Design District, Dubai, UAE",
+  "socials": {
+    "instagram": "studio.oryx",
+    "linkedin": "sara-thomas-example",
+    "pinterest": "studiooryx"
+  },
+  "links": [
+    { "label": "View portfolio (PDF)", "url": "https://example.com/studio-oryx/portfolio.pdf" }
+  ]
+}
