@@ -2,20 +2,27 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hello from the cloud</title>
-<style>
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center;
-         font-family: system-ui, sans-serif; background: #f6f4ef; color: #222; }
-  main { text-align: center; padding: 2rem; }
-  h1 { font-size: clamp(2rem, 6vw, 3.5rem); margin: 0 0 .5rem; }
-  p { color: #666; font-size: 1.1rem; margin: 0; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#1f2a37">
+<meta name="description" content="Design a house in your browser: draw walls, add doors, windows, furniture and a roof, then walk through it in 3D.">
+<title>House Builder 3D</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M8 30 32 10l24 20v26H8z' fill='%23e2cfae' stroke='%231f2a37' stroke-width='4'/%3E%3Cpath d='M26 56V40h12v16' fill='%23a8553d'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.min.js" } }
+</script>
 </head>
-<body>
-<main>
-  <h1>Hello from the cloud</h1>
-  <p>This page was built as a test for Claude Code on the web.</p>
+<body data-view="3d">
+<header id="topbar"></header>
+<main id="views">
+  <div id="plan" class="pane" aria-label="2D plan"></div>
+  <div id="view3d" class="pane" aria-label="3D view"></div>
+  <div id="walkOverlay"></div>
 </main>
+<section id="sheet" aria-label="Options"></section>
+<nav id="toolbar" aria-label="Tools"></nav>
+<div id="toast" role="status" aria-live="polite"></div>
+<noscript><p style="padding:2rem">House Builder 3D needs JavaScript turned on.</p></noscript>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>
